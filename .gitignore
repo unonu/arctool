@@ -1,0 +1,8 @@
+*.arp
+*.pro
+*.pro.user
+__pycache__
+*.pdf
+*.odf
+*.html
+doc/_build/*

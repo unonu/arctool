@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ARCTool</string>
+  </property>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>1</horstretch>
+     <verstretch>1</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="sizeConstraint">
+     <enum>QLayout::SetMaximumSize</enum>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QMenuBar" name="menuBar">
+      <property name="nativeMenuBar">
+       <bool>true</bool>
+      </property>
+      <widget class="QMenu" name="menuFile">
+       <property name="title">
+        <string>File</string>
+       </property>
+       <widget class="QMenu" name="menuExport_Report">
+        <property name="title">
+         <string>Export Report</string>
+        </property>
+        <addaction name="actionPrint_PDF"/>
+        <addaction name="actionExport_docx"/>
+        <addaction name="actionExport_odt"/>
+        <addaction name="actionExport_HTML"/>
+        <addaction name="actionExport_Plain_Text"/>
+       </widget>
+       <addaction name="actionNew_Profile"/>
+       <addaction name="actionOpen_Profile"/>
+       <addaction name="actionSave_Profile"/>
+       <addaction name="actionSave_Profile_As"/>
+       <addaction name="menuExport_Report"/>
+       <addaction name="separator"/>
+       <addaction name="actionQuit"/>
+      </widget>
+      <widget class="QMenu" name="menuEdit">
+       <property name="title">
+        <string>Edit</string>
+       </property>
+       <addaction name="actionAdd_Section"/>
+       <addaction name="actionRemove_Section"/>
+       <addaction name="actionMove_Section_Up"/>
+       <addaction name="actionMove_Section_Down"/>
+      </widget>
+      <widget class="QMenu" name="menuTools">
+       <property name="title">
+        <string>Tools</string>
+       </property>
+       <addaction name="actionImport_Package"/>
+       <addaction name="actionRemove_Package"/>
+       <addaction name="separator"/>
+       <addaction name="actionGenerate_Report"/>
+       <addaction name="separator"/>
+       <addaction name="actionPreferences"/>
+      </widget>
+      <widget class="QMenu" name="menuHelp">
+       <property name="title">
+        <string>Help</string>
+       </property>
+       <addaction name="actionARCTool_Wiki"/>
+       <addaction name="separator"/>
+       <addaction name="actionAbout"/>
+      </widget>
+      <addaction name="menuFile"/>
+      <addaction name="menuEdit"/>
+      <addaction name="menuTools"/>
+      <addaction name="menuHelp"/>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="profileTools">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="profileLabel">
+        <property name="text">
+         <string>Profile:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="profileName">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="placeholderText">
+         <string>Profile Name</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Context:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="contextBox"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="contextWidgetContainer"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QSplitter" name="workspaceSplitter">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="reportToolsWidget">
+       <layout class="QVBoxLayout" name="reportTools" stretch="0,0,0,0">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
+        <item>
+         <widget class="QListWidget" name="sectionList">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="tabKeyNavigation">
+           <bool>true</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="defaultDropAction">
+           <enum>Qt::MoveAction</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="sectionTools">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QToolButton" name="saveProfile">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="openProfile">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="moveUp">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+PgDown</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="moveDown">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+PgUp</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="removeSection">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="shortcut">
+             <string>Del</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="addSection">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+Shift+N</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="sectionSeperator">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="reportActions">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="generateReport">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Generate Report</string>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+G</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="exportReport">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Export Report...</string>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+E</string>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::MenuButtonPopup</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="pluginToolsWidget">
+       <layout class="QVBoxLayout" name="pluginTools" stretch="0,1">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="pluginInfo">
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="sectionTitle">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="placeholderText">
+             <string>Section Title</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="pluginTypeLabel">
+            <property name="text">
+             <string>Plugin:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pluginButton">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <italic>true</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="toolTip">
+             <string>Click to set Plugin</string>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Set...</string>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="pluginSettingsWidget" native="true">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <layout class="QHBoxLayout" name="pluginSettings">
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QCheckBox" name="showTitle">
+               <property name="text">
+                <string>Show Title</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QScrollArea" name="pluginOptions">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionOpen">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Open...</string>
+   </property>
+  </action>
+  <action name="actionSave_Report">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Report...</string>
+   </property>
+  </action>
+  <action name="actionSave_Profile">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Save Profile...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_docx">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>.docx</string>
+   </property>
+  </action>
+  <action name="action_PDF">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>.PDF</string>
+   </property>
+  </action>
+  <action name="action_odf">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>.odf</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionAdd_Section">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Add Section</string>
+   </property>
+  </action>
+  <action name="actionRemove_Section">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove Section</string>
+   </property>
+  </action>
+  <action name="actionMove_Section_Up">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Move Section Up</string>
+   </property>
+  </action>
+  <action name="actionMove_Section_Down">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Move Section Down</string>
+   </property>
+  </action>
+  <action name="actionImport_Package">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Import Package...</string>
+   </property>
+  </action>
+  <action name="actionRemove_Package">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove Package...</string>
+   </property>
+  </action>
+  <action name="actionGenerate_Report">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Generate Report</string>
+   </property>
+  </action>
+  <action name="actionARCTool_Wiki">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>ARCTool Wiki</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Preferences...</string>
+   </property>
+  </action>
+  <action name="actionOpen_Profile">
+   <property name="text">
+    <string>Open Profile...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionPrint_PDF">
+   <property name="text">
+    <string>Print PDF...</string>
+   </property>
+  </action>
+  <action name="actionExport_HTML">
+   <property name="text">
+    <string>Export HTML...</string>
+   </property>
+  </action>
+  <action name="actionExport_ODF">
+   <property name="text">
+    <string>Export odf...</string>
+   </property>
+  </action>
+  <action name="actionExport_Plain_Text">
+   <property name="text">
+    <string>Export Plain Text...</string>
+   </property>
+  </action>
+  <action name="actionExport_docx">
+   <property name="text">
+    <string>Export docx...</string>
+   </property>
+  </action>
+  <action name="actionExport_odt">
+   <property name="text">
+    <string>Export odt...</string>
+   </property>
+  </action>
+  <action name="actionNew_Profile">
+   <property name="text">
+    <string>New Profile</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionSave_Profile_As">
+   <property name="text">
+    <string>Save Profile As...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="2" margin="2"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionGenerate_Report</sender>
+   <signal>triggered()</signal>
+   <receiver>generateReport</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>58</x>
+     <y>321</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>324</x>
+     <y>179</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAdd_Section</sender>
+   <signal>triggered()</signal>
+   <receiver>addSection</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>258</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave_Profile</sender>
+   <signal>triggered()</signal>
+   <receiver>saveProfile</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>12</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMove_Section_Up</sender>
+   <signal>triggered()</signal>
+   <receiver>moveUp</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>192</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMove_Section_Down</sender>
+   <signal>triggered()</signal>
+   <receiver>moveDown</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>214</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen_Profile</sender>
+   <signal>triggered()</signal>
+   <receiver>openProfile</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>34</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRemove_Section</sender>
+   <signal>triggered()</signal>
+   <receiver>removeSection</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>236</x>
+     <y>412</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
