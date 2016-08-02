@@ -18,6 +18,8 @@ import arc.arcclasses as arcclasses
 import arc.arcgui as arcgui
 import quopri
 import re
+import imaplib
+import email
 
 class Plugin(arcclasses.Plugin):
 	def __init__(self,package):
@@ -172,7 +174,6 @@ class Plugin(arcclasses.Plugin):
 	def makeRequest(self):
 		# make async? or at least talk to the user
 
-		import imaplib, email
 
 		# Logic
 		req, r, i = self.widget.emailFilterTable.getRequest(
@@ -190,7 +191,7 @@ class Plugin(arcclasses.Plugin):
 
 		if req == '':
 			req = 'ALL'
-			
+
 		# Context
 		if self.widget.contextCheck.isChecked():
 			b = ARCTool.getContext().getBegin("d-MMM-yyyy")
@@ -216,7 +217,7 @@ class Plugin(arcclasses.Plugin):
 			passDialog = arcgui.LoginDialog(self.widget)
 			try:
 				passDialog.credentials.connect(
-					lambda x, y: M.login(x,y) if not(x==y=='') else print('abort')
+					lambda x, y: M.login(x,y) if not(x==y=='') else print('')
 				)
 			except:
 				ARCTool.getStatusBar().showMessage(
@@ -228,7 +229,8 @@ class Plugin(arcclasses.Plugin):
 
 			try:
 				mailbox = self.widget.selectEdit.text()
-				if (mailbox == '' or mailbox.lower() =='inbox') and req == '':
+				if ((mailbox == '' or mailbox.lower() =='inbox')
+					and req == 'ALL'):
 					ARCTool.getStatusBar().showMessage(
 						"Can't select Inbox without at least one filter."
 					)
@@ -268,7 +270,8 @@ class Plugin(arcclasses.Plugin):
 		self.widget.mailSelector.clear()
 		for m in self.emails:
 			self.widget.mailSelector.addItem(
-				str(quopri.decodestring(m.__getitem__('subject'))) or 'No Subject'
+				quopri.decodestring(m.__getitem__('subject')).decode('utf-8')
+				or 'No Subject'
 			)
 
 	def updateMailBrowser(self):
@@ -441,14 +444,14 @@ class Plugin(arcclasses.Plugin):
 							try:
 								body = part.get_payload(decode=True).decode('utf-8')
 							except UnicodeDecodeError:
-								body = quopri.decodestring(part.get_payload())
+								body = quopri.decodestring(part.get_payload()).decode('utf-8')
 							doc.setPlainText(body)
 						elif typ == 'text/html':
 							body = ''
 							try:
 								body = part.get_payload(decode=True).decode('utf-8')
 							except UnicodeDecodeError:
-								body = quopri.decodestring(part.get_payload())
+								body = quopri.decodestring(part.get_payload()).decode('utf-8')
 							doc.setHtml(body)
 				curs = []
 				for p in self.groups[g][message]:
@@ -495,12 +498,12 @@ class Plugin(arcclasses.Plugin):
 					try:
 						body = part.get_payload(decode=True).decode('utf-8')
 					except UnicodeDecodeError:
-						body = str(quopri.decodestring(part.get_payload()))
+						body = quopri.decodestring(part.get_payload()).decode('utf-8')
 				elif typ == 'text/plain' and dis == None and body == '':
 					try:
 						body = part.get_payload(decode=True).decode('utf-8')
 					except UnicodeDecodeError:
-						body = str(quopri.decodestring(part.get_payload()))
+						body = quopri.decodestring(part.get_payload()).decode('utf-8')
 				elif typ[:typ.find('/')] == 'image' and self.igImages:
 					# Embed image
 					dis = dis.split(';',1)

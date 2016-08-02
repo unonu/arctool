@@ -8,6 +8,8 @@ import arc.arcclasses as arcclasses
 import arc.arcgui as arcgui
 import quopri
 import re
+import imaplib
+import email
 
 class Plugin(arcclasses.Plugin):
 	headers = '|'.join(
@@ -165,7 +167,7 @@ class Plugin(arcclasses.Plugin):
 							continue
 					elif typ == 'text/html':
 						try:
-							text = part.get_payload(decode=True)\
+							text = part.get_payload(decode=True) \
 								.decode('utf-8')
 						except UnicodeDecodeError:
 							print("Couldn't decode this part")
@@ -212,7 +214,6 @@ class Plugin(arcclasses.Plugin):
 	def makeRequest(self):
 		# make async? or at least talk to the user
 
-		import imaplib, email
 
 		# Logic
 		req, r, i = self.widget.emailFilterTable.getRequest(
@@ -255,7 +256,7 @@ class Plugin(arcclasses.Plugin):
 			passDialog = arcgui.LoginDialog(self.widget)
 			try:
 				passDialog.credentials.connect(
-					lambda x, y: M.login(x,y) if not(x==y=='') else print('abort')
+					lambda x, y: M.login(x,y) if not(x==y=='') else print('')
 				)
 			except:
 				ARCTool.getStatusBar().showMessage(
@@ -269,7 +270,8 @@ class Plugin(arcclasses.Plugin):
 					"Selecting mailbox"
 				)
 				mailbox = self.widget.selectEdit.text()
-				if (mailbox == '' or mailbox.lower() =='inbox') and req == '':
+				if ((mailbox == '' or mailbox.lower() =='inbox')
+					and req == 'ALL'):
 					ARCTool.getStatusBar().showMessage(
 						"Can't select Inbox without at least one filter."
 					)
