@@ -228,6 +228,9 @@ class Plugin(arcclasses.Plugin):
 			)
 			return -1
 
+		if req == '':
+			req = 'ALL'
+
 		# Context
 		if self.widget.contextCheck.isChecked():
 			b = ARCTool.getContext().getBegin("d-MMM-yyyy")
@@ -246,7 +249,7 @@ class Plugin(arcclasses.Plugin):
 
 		with protocol(
 			PM.getPreference('Default Package','emailserver'),
-			int(PM.getPreference('Default Package','emailport'))
+			int(PM.getPreference('Default Package','emailport') or 993)
 		) as M:
 		
 			passDialog = arcgui.LoginDialog(self.widget)

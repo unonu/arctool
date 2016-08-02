@@ -4,6 +4,8 @@ import sys
 import re
 import os
 import tarfile
+import tempfile
+import importlib
 
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -47,7 +49,6 @@ class ARCTool(QMainWindow):
 		self.document = None
 		self.context = None
 		self.loadContexts()
-		self.loadPackages()
 		self.profile.setListWidget(self.ui.sectionList)
 		self.isSaved = True
 
@@ -111,13 +112,20 @@ class ARCTool(QMainWindow):
 		 )
 		self.removeDialog.buttonClicked.connect(self.removeSection)
 
-		# Plugin Select dialog
+		# Plugin Select dialog and packages
+		self.packages = []
+		self.plugins = {}
+		self.packageNames = {}
 		self.pluginDialog = ARCG.PluginSelectDialog(self)
 		self.pluginDialog.accepted.connect(self.assignSectionPlugin)
+		self.loadPackages()
 
 		# Preference Dialog
 		self.preferenceDialog = ARCP.PreferenceManager(self)
 		self.ui.actionPreferences.triggered.connect(self.preferenceDialog.exec)
+
+		# Import package file browser
+		self.ui.actionImport_Package.triggered.connect(self.openPackageArchive)
 
 		# Connect Profile/Report Tools signals
 		self.ui.profileName.textChanged.connect(
@@ -532,12 +540,12 @@ class ARCTool(QMainWindow):
 		os.makedirs(os.path.join(self.storagePath, "packages"), 0o777, True)
 		open(os.path.join(self.storagePath, "config"), 'a').close()
 		sys.path.append(os.path.dirname(__file__))
+		# Add package directories so packages can include local Python plugins
+		sys.path.append(os.path.join(self.storagePath, "packages"))
+		sys.path.append(os.path.join(os.path.dirname(__file__), "packages"))
+
 
 	def loadPackages(self):
-		import importlib
-		self.packages = []
-		self.plugins = {}
-		self.packageNames = {}
 		packagePaths = []
 
 		# Scan directories for available packages
@@ -550,20 +558,19 @@ class ARCTool(QMainWindow):
 			if d.is_dir():
 				packagePaths.append(d.path)
 
-		# Add package directories so packages can include local Python plugins
-		sys.path.append(os.path.join(self.storagePath, "packages"))
-		sys.path.append(os.path.join(os.path.dirname(__file__), "packages"))
-
 		# TODO: add custom (user defined) package search directories
 
 		# Create Packages and stage their plugins
 		for p in packagePaths:
 			package = ARCC.Package(p)
-			self.packages.append(package)
-			self.packageNames[package.getName()] = package
-			# Map plugin names to the package
-			for m in package.getPluginNames():
-				self.plugins[m] = package
+			if package.getName() not in self.packageNames:
+				self.packageNames[package.getName()] = package
+				self.packages.append(package)
+				# Map plugin names to the package
+				for m in package.getPluginNames():
+					self.plugins[m] = package
+
+		ARCG.PluginSelectDialog.updateModuleList()
 
 	def generateReport(self):
 		self.ui.statusBar.showMessage("Generating Report")
@@ -599,13 +606,23 @@ class ARCTool(QMainWindow):
 
 		return
 
-	def exportReport(self):
-		self.ui.statusBar.showMessage("Exporting Report")
-		ARCD.pdfExport(self.document)
-		self.ui.statusBar.showMessage("Finished Exporting Report")
+	# def exportReport(self):
+	# 	self.ui.statusBar.showMessage("Exporting Report")
+	# 	ARCD.pdfExport(self.document)
+	# 	self.ui.statusBar.showMessage("Finished Exporting Report")
+
+	def openPackageArchive(self,path=None):
+		path = path or QFileDialog.getOpenFileName(
+			self,"Open Profile",None,
+			"Package Archive (*.tar.gz)"
+		)[0]
+		self.installPackage(path)
 
 	def installPackage(self,path):
 		pkgName = os.path.basename(path).split('.',1)[0]
+		msg = QMessageBox(self)
+		msg.setWindowTitle('Install Package')
+		msg.setStandardButtons(QMessageBox.Ok)
 		with tarfile.open(path,'r:gz') as archive:
 			path = os.path.join(self.storagePath, "packages", pkgName)
 
@@ -613,39 +630,57 @@ class ARCTool(QMainWindow):
 				os.mkdir(path)
 			except FileExistsError:
 				print("A package by this name already exists")
+				msg.setText('A package by this name already exists.')
 				self.ui.statusBar.showMessage(
 					"A package by this name already exists.")
+				msg.exec()
+				# This should actually update the package instead...
 				return
 
 			names = archive.getnames()
 			if ('__init__.py' not in names):
-				print("This package is malformed")
-				self.ui.statusBar.showMessage("This package is malformed.")
+
+				os.rmdir(path)
+				msg.setText('The package is malformed.')
+				self.ui.statusBar.showMessage("The package is malformed.")
+				msg.exec()
 				return
 
 			try:
 				tmpDir = tempfile.mkdtemp()
 				archive.extract('__init__.py',tmpDir,numeric_owner=True)
 				with open(os.path.join(tmpDir,'__init__.py')) as init:
-					all = re.search('(?s)__all__\s*=\s*\[(.)+?\](?<=\r)?\n',
+					all = re.search(r'(?s)__all__\s*=\s*\[(.)+?\](?<=\r)?\n',
 						init.read()).group(1)
-					for name in re.findall('\w+'):
+					for name in re.findall('\w+',all):
 						if name not in names:
 							print("Missing plugin")
 				os.remove(os.path.join(tmpDir,'__init__.py'))
 				os.rmdir(tmpDir)
 			except:
-				print("Couldn't read package")
-				self.ui.statusBar.showMessage("Couldn't read package.")
+				os.rmdir(path)
+				try:
+					os.remove(os.path.join(tmpDir,'__init__.py'))
+				except:
+					pass
+				try:
+					os.rmdir(tmpDir)
+				except:
+					pass
+				msg.setText('The package could not be read.')
+				self.ui.statusBar.showMessage("The package could not be read.")
+				msg.exec()
 				return
 
 			for name in names:
 				# Check for malicious intent? ;p
-				if re.match(r'^((\.\.)|\.[/\\]|/|[A-Za-z]+:\\)'):
+				if re.match(r'^((\.\.)|\.[/\\]|/|[A-Za-z]+:\\)', name):
 					return
 				archive.extract(name,path,numeric_owner=True)
 
-		loadPackages()
+		msg.setText('The package was succesfully installed')
+		msg.exec()
+		self.loadPackages()
 		return
 
 	@staticmethod

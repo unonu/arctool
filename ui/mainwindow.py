@@ -251,7 +251,7 @@ class Ui_MainWindow(object):
 		self.actionMove_Section_Down.setEnabled(False)
 		self.actionMove_Section_Down.setObjectName("actionMove_Section_Down")
 		self.actionImport_Package = QtWidgets.QAction(MainWindow)
-		self.actionImport_Package.setEnabled(False)
+		self.actionImport_Package.setEnabled(True)
 		self.actionImport_Package.setObjectName("actionImport_Package")
 		self.actionRemove_Package = QtWidgets.QAction(MainWindow)
 		self.actionRemove_Package.setEnabled(False)

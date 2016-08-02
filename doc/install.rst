@@ -33,7 +33,7 @@ Running ARCTool
 After installing the dependancies, you can test it out.
 
 In the source directory, run:
-	`python3 main.py`
+	`python3 arctool.py`
 
-Alternitavely, `main.py` has a shebang at the top, so making it executable and
-running it should work too.
+Alternitavely, `arctool.py` has a shebang at the top, so making it executable
+and running it should work too.

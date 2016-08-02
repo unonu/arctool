@@ -5,6 +5,12 @@ from ui.logindialog import Ui_LoginDialog
 from . import arcclasses as ARCC
 
 class PluginSelectDialog(QDialog):
+	# This is bad. If another object want's to be the parent, what will happen?
+	# But at the same time, this needs to be relatively static due to it being
+	# needed by different parts of the program. Maybe have instances tied to
+	# the ARCTool and just have things find that? WHAT SHOULD I DO. Oh well, it
+	# works for now, and this memo exists, so it can be taken care of later.
+	parent = None
 	ui = None
 	packages = None
 	pluginInfo = None
@@ -14,13 +20,11 @@ class PluginSelectDialog(QDialog):
 		super(PluginSelectDialog,self).__init__(parent)
 
 		if not PluginSelectDialog.__init:
-			PluginSelectDialog.packages = sorted(parent.packages)
-
 			PluginSelectDialog.ui = Ui_PluginSelectDialog()
 			PluginSelectDialog.ui.setupUi(self)
-			PluginSelectDialog.ui.packageList.addItems(
-				[p.getName() for p in PluginSelectDialog.packages]
-			)
+
+			PluginSelectDialog.parent = parent
+			PluginSelectDialog.updateModuleList()
 			PluginSelectDialog.ui.packageList.currentItemChanged.connect(
 				PluginSelectDialog.updatePluginList
 			)
@@ -35,6 +39,14 @@ class PluginSelectDialog(QDialog):
 			PluginSelectDialog.__init = True
 
 	@staticmethod
+	def updateModuleList():
+		PluginSelectDialog.packages = sorted(PluginSelectDialog.parent.packages)
+		PluginSelectDialog.ui.packageList.clear()
+		PluginSelectDialog.ui.packageList.addItems(
+			[p.getName() for p in PluginSelectDialog.packages]
+		)
+
+	@staticmethod
 	def updatePluginInfo():
 		for p in PluginSelectDialog.packages:
 			for m in p.getPluginNames():
@@ -46,6 +58,7 @@ class PluginSelectDialog(QDialog):
 
 	@staticmethod
 	def updatePluginList():
+		if PluginSelectDialog.ui.packageList.currentItem() is None: return;
 		index_ = PluginSelectDialog.ui.packageList.currentIndex().row()
 
 		PluginSelectDialog.updatePluginInfo()
