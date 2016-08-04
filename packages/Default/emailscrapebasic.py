@@ -134,7 +134,7 @@ class Plugin(arcclasses.Plugin):
 		self.options['logicBox'] =\
 			(self.widget.logicBox.text(),'text')
 		self.options['selectEdit'] =\
-			(self.widget.logicBox.text(),'text')
+			(self.widget.selectEdit.text(),'text')
 		self.options['delimeterEdit'] =\
 			(self.widget.delimeterEdit.text(), 'text')
 		self.options['contextCheck'] =\
@@ -219,30 +219,42 @@ class Plugin(arcclasses.Plugin):
 				passDialog.credentials.connect(
 					lambda x, y: M.login(x,y) if not(x==y=='') else print('')
 				)
+				passDialog.exec()
 			except:
 				ARCTool.getStatusBar().showMessage(
-					"Couldn't login to IMAP server."
+					"Couldn't login to IMAP server.", 5000
 				)
 				return -1
 
-			passDialog.exec()
-
 			try:
-				mailbox = self.widget.selectEdit.text()
+				ARCTool.getStatusBar().showMessage(
+					"Selecting mailbox..."
+				)
+				mailbox = self.widget.selectEdit.text().replace('"','\\"')
 				if ((mailbox == '' or mailbox.lower() =='inbox')
 					and req == 'ALL'):
 					ARCTool.getStatusBar().showMessage(
-						"Can't select Inbox without at least one filter."
+						"Can't select Inbox without at least one filter.",
+						5000
 					)
 					return -1
-				M.select(mailbox if mailbox != '' else 'INBOX',readonly=True)
+				M.select('"'+mailbox+'"' if mailbox != '' else 'INBOX',
+					readonly=True)
 				try:
+					ARCTool.getStatusBar().showMessage(
+						"Searching %s..." %(
+							mailbox if mailbox != '' else 'Inbox'
+						)
+					)
 					typ, data = M.search(None, req)
 				except protocol.error as e:
 					ARCTool.getStatusBar().showMessage(
-						"Couldn't search mailbox: "+str(e)
+						"Couldn't search mailbox: "+str(e), 5000
 					)
 				else:
+					ARCTool.getStatusBar().showMessage(
+						"Fetching Messages..."
+					)
 					self.emails = []
 					for num in data[0].split():
 						typ, data = M.fetch(num, '(RFC822)')
@@ -252,14 +264,15 @@ class Plugin(arcclasses.Plugin):
 					M.close()
 			except protocol.error as e:
 				ARCTool.getStatusBar().showMessage(
-					"Couldn't login to IMAP server: "+str(e)
+					"Couldn't select inbox: "+str(e), 5000
 				)
 				return -1
 
 		ARCTool.getStatusBar().showMessage(
 			"Fetched %d message%s" %(len(self.emails),
 				'' if len(self.emails) == 1 else 's'
-			)
+			),
+			5000
 		)
 		self.fetched = True
 		self.updateMailList()
@@ -404,8 +417,8 @@ class Plugin(arcclasses.Plugin):
 			name = self.widget.groupList.currentItem().text()
 
 		email = self.emails[self.widget.mailSelector.currentIndex()]
-		# self.groups[name][email] = []
-		self.groups[name][email] = [None]
+		# self.groups[name][email] = []	   <===\\
+		self.groups[name][email] = [None] #<===//
 
 	def selectGroup(self,name=None):
 		if not name:

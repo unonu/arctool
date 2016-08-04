@@ -164,9 +164,6 @@ class LoginDialog(QDialog):
 		self.ui.b.setText('')
 
 	def cancel(self):
-		self.credentials.emit(None,None)
-		self.username.emit(None)
-		self.password.emit(None)
 		self.ui.a.setText('')
 		self.ui.b.setText('')
 
