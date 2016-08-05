@@ -108,7 +108,7 @@ class EmailFilterTable(QtWidgets.QTableWidget):
 		self.setProperty('cornerButtonEnabled',False)
 		self.verticalHeader().hide()
 		self.setHorizontalHeaderLabels(
-			['Label','Criterea','','Value','Inverted','']
+			['Label','Criteria','','Value','Inverted','']
 		)
 		self.horizontalHeader().setSectionsClickable(False)
 		self.horizontalHeader().setSectionResizeMode(

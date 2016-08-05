@@ -35,6 +35,7 @@ class Plugin(arcclasses.Plugin):
 		self.contextFilters = []
 
 		self.igHeader = False
+		self.igPles = False
 		self.igReplies= False
 		self.igDup 	  = False
 		self.igFirstDup = False
@@ -49,8 +50,10 @@ class Plugin(arcclasses.Plugin):
 		#Filter
 		self.widget.emailFilterTable = EmailFilterTable()
 		self.widget.emailFilterTable.tableChanged.connect(
-			lambda x: self.widget.fetchButton.setProperty('enabled',(x > 0 or
-				self.widget.contextCheck.isChecked()))
+			lambda x: self.widget.fetchButton.setProperty('enabled',
+				(x > 0
+				or self.widget.contextCheck.isChecked()
+				or self.widget.selectEdit.text() != ''))
 		)
 		self.widget.emailFilterTable.tableChanged.connect(
 				ARCTool.signalProfileChanged
@@ -71,6 +74,9 @@ class Plugin(arcclasses.Plugin):
 		)
 		self.widget.headerCheck.stateChanged.connect(
 			lambda x: self.setIgHeader(x > 0)
+		)
+		self.widget.plesCheck.stateChanged.connect(
+			lambda x: self.setIgPles(x > 0)
 		)
 		self.widget.quoteCheck.stateChanged.connect(
 			lambda x: self.setIgReplies(x > 0)
@@ -120,6 +126,8 @@ class Plugin(arcclasses.Plugin):
 			(self.widget.contextCheck.isChecked(), 'checked')
 		self.options['headerCheck'] =\
 			(self.widget.headerCheck.isChecked(), 'checked')
+		self.options['plesCheck'] =\
+			(self.widget.plesCheck.isChecked(), 'checked')
 		self.options['quoteCheck'] =\
 			(self.widget.quoteCheck.isChecked(), 'checked')
 		self.options['dupCheck'] =\
@@ -159,8 +167,9 @@ class Plugin(arcclasses.Plugin):
 					if typ == 'text/plain':
 						try:
 							text = ('<p>'
-									+ part.get_payload(decode=True)
-										.decode('utf-8') + '</p>'
+								+ re.sub(r'(?<=\r)\n',r'<br/>',
+								part.get_payload(decode=True).decode('utf-8'))
+								+ '</p>'
 							)
 						except UnicodeDecodeError:
 							print("Couldn't decode this part")
@@ -172,7 +181,7 @@ class Plugin(arcclasses.Plugin):
 						except UnicodeDecodeError:
 							print("Couldn't decode this part")
 							continue
-					elif 'image/' in typ and not self.igImages:
+					elif 'image/' in typ and self.igImages is not True:
 						# Embed image
 						# print('embed image')
 						dis = dis.split(';',1)
@@ -186,13 +195,19 @@ class Plugin(arcclasses.Plugin):
 								QUrl('cid:'+part.get('Content-ID')[1:-1]),
 								img
 							)
+			print('message converted')
 			if self.igReplies:
 				text = self.stripReplies(message,text)
+			# if self.igPles:
+			# 	text = self.stripPleasantries(text)
+			print('replies ignored')
 			if self.igHeader:
 				text = self.stripHeaders(message,text)
+			print('header ignored')
 			cursor.insertHtml(text)
 			if self.delim != '':
-				cursor.insertHtml('<br/><p>' + self.delim + '</p><br/>')
+				cursor.insertHtml('<br/><p>' + chr(2) + '</p><br/>')
+			print('message inserted')
 			cursor.insertBlock()
 			cursor.setCharFormat(_c)
 			cursor.setBlockFormat(_b)
@@ -203,17 +218,35 @@ class Plugin(arcclasses.Plugin):
 			cursor.setBlockFormat(_b)
 		if self.igImages:
 			doc.setHtml(self.stripImages(doc.toHtml()))
+			print('images stripped')
 		if self.igDup:
 			doc.setHtml(self.stripDuplicate(doc.toHtml()))
+			print('duplicates stripped')
+		doc.setHtml(doc.toHtml().replace(chr(2),self.delim))
 		if self.igSpace:
 			doc.setHtml(self.collapseSpace(doc.toHtml()))
+			print('whitespace stripped')
+
+		if self.igPles:
+			plc = QTextCursor(doc)
+			print('a')
+			print(plc.position(), doc.characterCount())
+			while plc.position() < doc.characterCount():
+				print('b', plc.position())
+				plc.movePosition(plc.EndOfBlock,plc.KeepAnchor)
+				text = plc.selectedText()
+				words = re.split(r'\b',text)
+				if len(words) < 4:
+					print(text)
+					plc.removeSelectedText()
+				plc.movePosition(plc.StartOfBlock)
+			print('pleasantries forgone')
 
 		# print("generated")
 		return doc
 
 	def makeRequest(self):
 		# make async? or at least talk to the user
-
 
 		# Logic
 		req, r, i = self.widget.emailFilterTable.getRequest(
@@ -296,7 +329,12 @@ class Plugin(arcclasses.Plugin):
 						"Fetching Messages..."
 					)
 					self.emails = []
-					for num in data[0].split():
+					_ = 1
+					nums = data[0].split()
+					for num in nums:
+						ARCTool.getStatusBar().showMessage(
+							"Fetching Message %d of %d..." %(_,len(nums))
+						)
 						typ, data = M.fetch(num, '(RFC822)')
 						self.emails.append(
 							email.message_from_bytes(data[0][1])
@@ -304,6 +342,7 @@ class Plugin(arcclasses.Plugin):
 						id = self.emails[-1].get('Message-ID')
 						if id:
 							self.emailIds[id] = self.emails[-1]
+						_ +=1
 					M.close()
 			except protocol.error as e:
 				ARCTool.getStatusBar().showMessage(
@@ -322,6 +361,9 @@ class Plugin(arcclasses.Plugin):
 
 	def setIgHeader(self, b):
 		self.igHeader = b
+
+	def setIgPles(self, b):
+		self.igPles = b
 
 	def setIgReplies(self, b):
 		self.igReplies = b
@@ -349,12 +391,61 @@ class Plugin(arcclasses.Plugin):
 			%(self.headers),'',text)
 		return text
 
+	def stripPleasantries(self,text):
+		return text
+
+		# deltas = []
+		# blocks = re.split('<br/?>',text)
+		# if len(blocks) == 1:
+		# 	return text
+
+		# print('enough blocks')
+		# for b in blocks[:]:
+		# 	_b = re.sub(r'(?s)\s*<.+?>\s*', '',b)
+		# 	_b = re.sub('\xa0',' ',_b)
+		# 	_b = re.sub(r'&nbsp;',' ',_b)
+		# 	if len(re.split(r'\b',_b)) < 4:
+				# blocks.remove(b)
+		# print(blocks)
+		# return ''.join(blocks)
+		# breaks = re.findall('<br/?>',text)
+		# blockIndex = [
+		# 	len(blocks[x]) + len(breaks[x]) for x in range(len(breaks))
+		# ] + [len(blocks[-1])]
+		# print('block indicies', blockIndex)
+		# for i in range(1,len(blocks)):
+		# 	blockIndex[i] += blockIndex[i-1]
+
+		# for b in blocks:
+		# 	b = re.sub(r'(?s)\s*<.+?>\s*', '',b)
+		
+		# wc = len(blocks[0])
+		# for i in range(1,len(blocks)):
+		# 	deltas.append( abs(len(blocks[i]) - len(blocks[i-1])) )
+		# 	wc = len(blocks[i])
+		# avg = wc/len(blocks)
+
+		# deltaN = sum(deltas) / (2*wc)
+		# blockLens = [len(b) for b in blocks]
+		
+		# if deltaN > avg/max(blockLens):
+		# 	asc = 0
+		# 	while deltas[asc] < avg:
+		# 		asc += 1
+		# 	des = len(deltas) - 1
+		# 	# Naive approach, should really check to see if other islands exist
+		# 	while des > asc and deltas[des] < avg:
+		# 		des -= 1
+
+		# 	print('start/stop block index', asc, des)
+		# 	text = text[blockIndex[asc]:blockIndex[des]]
+		# return text
+
 	def stripImages(self,text):
 		text = re.sub('(?s)<img .+?(?:/>|</img>)','',text)
 		return text
 
 	def collapseSpace(self,text):
-		# print("hello")
 		# Collapse Spaces
 		text = re.sub('\xa0',' ',text)
 		text = re.sub(' +',' ',text)
@@ -429,14 +520,18 @@ class Plugin(arcclasses.Plugin):
 		body = re.search('(?s)<body[^>]*?>(.+)</body>',text).group(1)
 		container = text.split(body)
 		tags = re.findall(r'(?s)\s*<.+?>\s*',body)
+		# Replace tags
 		stripped = re.sub(r'(?s)\s*<.+?>\s*',chr(1),body)
+		# Replace 
 		stripped = re.sub('\xa0',' ',stripped)
 		stripped = re.sub(r'&nbsp;',' ',stripped)
-		spaces = re.findall(r'\s+',stripped)
-		stripped = re.sub(r'\s+',r' ',stripped)
-		# print("stripped")
+		spaces = re.findall(r'(?s)\s+',stripped)
+		stripped = re.sub(r'(?s)\s+',r' ',stripped)
+		print("stripped")
 		_ = []
-		for word in re.finditer(r'(?:^| )(.+?)(?:(?= )|$)',stripped):
+		# for word in re.finditer(r'(?:^| )(.+?)(?:(?= )|$)',stripped):
+		for word in re.finditer(r'(?:\b)(.+?)(?:\b)',stripped):
+		# for word in re.finditer(r'(?:\s)(.+?)(?:\s)',stripped):
 			_.append((word.group(1),word.start(1),word.end(1)))
 			if len(_) == num:
 				hsh = ''.join(x[0].replace(chr(1),'') for x in _).__hash__()
@@ -445,45 +540,47 @@ class Plugin(arcclasses.Plugin):
 				globs[hsh].append((_[0][1],_[-1][2]))
 				_.pop(0)
 
-		# print("globbed")
+		print("globbed")
 		chains = []
 		ranges = []
 		for d in globs:
 			if len(globs[d]) > 1:
-				ranges += [x for x in globs[d][1 if self.igFirstDup else 0:]]
+				ranges += globs[d][1 if self.igFirstDup else 0:]
 		ranges.sort()
 		for r in ranges:
 			if len(chains) == 0:
 				chains.append([r[0],r[1]])
 				continue
-			if r[0] <= chains[-1][1]:
+			if r[0] <= chains[-1][1] and r[1] > chains[-1][1]:
 				chains[-1][1] = r[1]
-			else:
+			elif r[0] > chains[-1][1]:
 				chains.append([r[0],r[1]])
-		# print("chained")
-		# This is complicated... Only remove the text but keep the tags
+		print("chained")
+		# Only remove the text but keep the tags
 		offset = 0
+		# print('#chains=',len(chains))
 		for c in chains:
 			# Could partition, but I want variable names
 			chunk = stripped[c[0]-offset:c[1]-offset]
 			head = stripped[:c[0]-offset]
 			tail = stripped[c[1]-offset:]
 			# print(chunk)
-			# print(len(head), len(tail))
+			lh, lt = len(head), len(tail)
+			# print(lh, lt, lh-lt)
+
 			tagsRemoved = chunk.count(chr(1))
 			spaceRemoved = chunk.count(' ')
 			offset += len(chunk) - tagsRemoved
-			spaces = (spaces[head.count(' '):]
-					  + spaces[head.count(' ')
-					  + spaceRemoved:])
+			spaces = (spaces[:head.count(' ')]
+					  + spaces[head.count(' ') + spaceRemoved:])
 
 			stripped = head + chr(1)*tagsRemoved + tail
-		# print("excised")
+		print("excised")
 
 		for s in spaces:
 			stripped = stripped.replace(' ',s,1)
 		for t in tags:
 			stripped = stripped.replace(chr(1),t,1)
-		# print("replaced")
+		print("replaced")
 
 		return container[0] + stripped + container[1]

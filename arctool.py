@@ -573,7 +573,7 @@ class ARCTool(QMainWindow):
 		ARCG.PluginSelectDialog.updateModuleList()
 
 	def generateReport(self):
-		self.ui.statusBar.showMessage("Generating Report")
+		self.ui.statusBar.showMessage("Generating Report...")
 		self.ui.exportReport.setEnabled(False)
 		self.document = ARCD.Document()
 		self.document.setTitle(self.profile.getName())
@@ -589,14 +589,19 @@ class ARCTool(QMainWindow):
 			# s.updateContent()
 			pb.setValue(i)
 			if s.hasPlugin():
-				r = self.document.addSection(s)
-				if r < 0:
-					self.ui.statusBar.removeWidget(pb)
-					self.ui.statusBar.showMessage(
-						"Generation Failed At " + s.getTitle()
-					)
-					self.ui.sectionList.setCurrentRow(toc[1].index(s))
-					return
+				try:
+					r = self.document.addSection(s)
+				except:
+					r = -1
+				else:
+					if r < 0:
+						self.ui.statusBar.removeWidget(pb)
+						self.ui.statusBar.showMessage(
+							"Generation Failed At " + s.getTitle()
+						)
+						self.ui.sectionList.setCurrentRow(toc[1].index(s))
+						return
+			self.ui.statusBar.showMessage("Generating Report...")
 			i += 1
 
 		self.ui.statusBar.removeWidget(pb)

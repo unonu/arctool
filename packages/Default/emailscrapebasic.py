@@ -56,8 +56,10 @@ class Plugin(arcclasses.Plugin):
 		#Filter
 		self.widget.emailFilterTable = EmailFilterTable()
 		self.widget.emailFilterTable.tableChanged.connect(
-			lambda x: self.widget.fetchButton.setProperty('enabled',(x > 0 or
-				self.widget.contextCheck.isChecked()))
+			lambda x: self.widget.fetchButton.setProperty('enabled',
+				(x > 0
+				or self.widget.contextCheck.isChecked()
+				or self.widget.selectEdit.text() != ''))
 		)
 		self.widget.emailFilterTable.tableChanged.connect(
 				ARCTool.signalProfileChanged

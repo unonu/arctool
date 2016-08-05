@@ -8,8 +8,8 @@ from math import sqrt, ceil
 class Glob(object):
 	def __init__(self,*curs):
 		self.val = '' # Actual text
-		self.sta = [] # [Start location, start location %]
-		self.end = [] # [eEd location, end location %]
+		self.sta = [0,0] # [Start location, start location %]
+		self.end = [0,0] # [eEd location, end location %]
 		self.gap = [] # [(gGp start, gap end),...]
 		self.cla = 0 # 'Line','paragraph','list'
 		self.sub = 0 # 'Short','medium','long'
