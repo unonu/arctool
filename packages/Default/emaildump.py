@@ -195,19 +195,19 @@ class Plugin(arcclasses.Plugin):
 								QUrl('cid:'+part.get('Content-ID')[1:-1]),
 								img
 							)
-			print('message converted')
+			# print('message converted')
 			if self.igReplies:
 				text = self.stripReplies(message,text)
 			# if self.igPles:
 			# 	text = self.stripPleasantries(text)
-			print('replies ignored')
+			# print('replies ignored')
 			if self.igHeader:
 				text = self.stripHeaders(message,text)
-			print('header ignored')
+			# print('header ignored')
 			cursor.insertHtml(text)
 			if self.delim != '':
-				cursor.insertHtml('<br/><p>' + chr(2) + '</p><br/>')
-			print('message inserted')
+				cursor.insertHtml('<br/><p>' + chr(2) + '</p><br/><br/>')
+			# print('message inserted')
 			cursor.insertBlock()
 			cursor.setCharFormat(_c)
 			cursor.setBlockFormat(_b)
@@ -219,28 +219,33 @@ class Plugin(arcclasses.Plugin):
 		if self.igImages:
 			doc.setHtml(self.stripImages(doc.toHtml()))
 			print('images stripped')
+
 		if self.igDup:
 			doc.setHtml(self.stripDuplicate(doc.toHtml()))
 			print('duplicates stripped')
+		# Delimiter (before ples strip in case we accdntly lose a marker)
 		doc.setHtml(doc.toHtml().replace(chr(2),self.delim))
+		if self.igPles:
+			plc = QTextCursor(doc)
+			go = True
+			while go:
+				plc.movePosition(plc.EndOfBlock,plc.KeepAnchor)
+				text = plc.selectedText()
+				words = [w for w in re.split(r'\s',text) if w != '']
+				# Removes things that aren't lists or tables or links
+				if (len(words) <= 4 and plc.currentList() is None
+					and plc.currentTable() is None
+					and text != self.delim
+					and not re.search('https?://',text)
+					and not re.search('(^|\s).\)\s',text)):
+					# print(text)
+					plc.removeSelectedText()
+				go = plc.movePosition(plc.NextBlock)
+			print('pleasantries forgone')
+
 		if self.igSpace:
 			doc.setHtml(self.collapseSpace(doc.toHtml()))
 			print('whitespace stripped')
-
-		if self.igPles:
-			plc = QTextCursor(doc)
-			print('a')
-			print(plc.position(), doc.characterCount())
-			while plc.position() < doc.characterCount():
-				print('b', plc.position())
-				plc.movePosition(plc.EndOfBlock,plc.KeepAnchor)
-				text = plc.selectedText()
-				words = re.split(r'\b',text)
-				if len(words) < 4:
-					print(text)
-					plc.removeSelectedText()
-				plc.movePosition(plc.StartOfBlock)
-			print('pleasantries forgone')
 
 		# print("generated")
 		return doc
@@ -451,10 +456,10 @@ class Plugin(arcclasses.Plugin):
 		text = re.sub(' +',' ',text)
 
 		# Collapse Breaks
-		text = re.sub(r'<br>\s*</br>','<br/>',text)
-		text = re.sub(r'(?<=>)\s*<br\s*/>\s*(?=</)', '',text)
-		text = re.sub(r'\s*<span( [^>]+)?>\s*</span>\s*','',text)
-		text = re.sub(r'\s*<p( [^>]+)?>\s*</p>\s*','',text)
+		text = re.sub(r'(?s)<br>\s*(?:</br>)?','<br/>',text)
+		text = re.sub(r'(?s)(?<=>)\s*<br\s*/?>\s*(?=<)', '',text)
+		text = re.sub(r'(?s)\s*<span( [^>]+)?>\s*</span>\s*','',text)
+		text = re.sub(r'(?s)\s*<p( [^>]+)?>\s*</p>\s*','',text)
 
 		return text
 
