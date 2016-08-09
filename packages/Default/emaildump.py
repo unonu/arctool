@@ -35,6 +35,7 @@ class Plugin(arcclasses.Plugin):
 		self.contextFilters = []
 
 		self.igHeader = False
+		self.addHeader = False
 		self.igPles = False
 		self.igReplies= False
 		self.igDup 	  = False
@@ -71,6 +72,9 @@ class Plugin(arcclasses.Plugin):
 		#Options
 		self.widget.contextCheck.stateChanged.connect(
 			lambda x : self.widget.fetchButton.setEnabled(x > 0)
+		)
+		self.widget.infoCheck.stateChanged.connect(
+			lambda x: self.setAddHeader(x > 0)
 		)
 		self.widget.headerCheck.stateChanged.connect(
 			lambda x: self.setIgHeader(x > 0)
@@ -124,6 +128,8 @@ class Plugin(arcclasses.Plugin):
 			(self.widget.delimeterEdit.text(), 'text')
 		self.options['contextCheck'] =\
 			(self.widget.contextCheck.isChecked(), 'checked')
+		self.options['infoCheck'] =\
+			(self.widget.infoCheck.isChecked(), 'checked')
 		self.options['headerCheck'] =\
 			(self.widget.headerCheck.isChecked(), 'checked')
 		self.options['plesCheck'] =\
@@ -154,6 +160,9 @@ class Plugin(arcclasses.Plugin):
 
 		doc = QTextDocument()
 		cursor = QTextCursor(doc)
+
+		# For add headers
+		headers = []
 
 		_c = _b = None
 		for message in self.emails:
@@ -204,9 +213,13 @@ class Plugin(arcclasses.Plugin):
 			if self.igHeader:
 				text = self.stripHeaders(message,text)
 			# print('header ignored')
+			if self.addHeader:
+				cursor.insertHtml('<br/><p id=29>' + chr(29) + '</p>')
+				headers.append(self.getHeader(message))
+			# print('custom header added')
 			cursor.insertHtml(text)
 			if self.delim != '':
-				cursor.insertHtml('<br/><p>' + chr(2) + '</p><br/><br/>')
+				cursor.insertHtml('<br/><p>' + chr(26) + '</p><br/><br/>')
 			# print('message inserted')
 			cursor.insertBlock()
 			cursor.setCharFormat(_c)
@@ -224,8 +237,15 @@ class Plugin(arcclasses.Plugin):
 			doc.setHtml(self.stripDuplicate(doc.toHtml()))
 			print('duplicates stripped')
 		# Delimiter (before ples strip in case we accdntly lose a marker)
-		doc.setHtml(doc.toHtml().replace(chr(2),self.delim))
+		doc.setHtml(doc.toHtml().replace(chr(26),self.delim))
+		if self.addHeader:
+			text = doc.toHtml()
+			for h in headers:
+				text = text.replace(chr(29),h,1)
+			doc.setHtml(text)
 		if self.igPles:
+			# This isn't in a function because it works on the QTextDoc
+			# doc.setHtml(self.stripPleasantries(doc.toHtml()))
 			plc = QTextCursor(doc)
 			go = True
 			while go:
@@ -242,6 +262,8 @@ class Plugin(arcclasses.Plugin):
 					plc.removeSelectedText()
 				go = plc.movePosition(plc.NextBlock)
 			print('pleasantries forgone')
+		print(doc.toHtml().count(chr(29)))
+
 
 		if self.igSpace:
 			doc.setHtml(self.collapseSpace(doc.toHtml()))
@@ -363,6 +385,9 @@ class Plugin(arcclasses.Plugin):
 		)
 		self.fetched = True
 		return 0
+
+	def setAddHeader(self, b):
+		self.addHeader = b
 
 	def setIgHeader(self, b):
 		self.igHeader = b
@@ -492,31 +517,41 @@ class Plugin(arcclasses.Plugin):
 						bodyText = re.sub('\xa0',' ',bodyText)
 						bodyRef = re.sub('\xa0',' ',bodyRef)
 						bodyTags = re.findall(r'\s*<.+?>\s*',bodyText)
-						bodyText = re.sub(r'\s*<.+?>\s*',chr(1),bodyText)
+						bodyText = re.sub(r'\s*<.+?>\s*',chr(24),bodyText)
 						bodyRef = [re.escape(p) for p in \
 							re.split(r'\s*<.+?>\s*',bodyRef) if p != '']
-						bodyRef = '(?s)' + (chr(1)+'+').join(bodyRef)
+						bodyRef = '(?s)' + (chr(24)+'+').join(bodyRef)
 						bodyRef = re.sub(r'(\\\s)+',r'\\s+',bodyRef)
 
 						# Search for the original message within the reply
 						partial = re.search(bodyRef,bodyText)
 						if partial:
-							excise = partial.group(0).count(chr(1))
+							excise = partial.group(0).count(chr(24))
 							offset =\
 								bodyText[:bodyText.find(partial.group(0))]\
-								.count(chr(1))
+								.count(chr(24))
 							bodyText = bodyText.replace(partial.group(0),'')
 							bodyTags = (bodyTags[:offset]
 										+ bodyTags[offset+excise:])
 							# Replace the tags
 							for t in bodyTags:
-								bodyText = bodyText.replace(chr(1),t,1)
+								bodyText = bodyText.replace(chr(24),t,1)
 							text = container[0] + bodyText + container[1]
 						# We messed up? Impossible...
 						# else:
 						# 	print(bodyText)
-						# 	print('-------vvvvvv------')
+						# 	print('-------vvvvvv-------')
 						# 	print(bodyRef)
+		return text
+
+	def getHeader(self, message):
+		text = '<br/><span><p style="text-align:center;font-weight:bold;">From '
+		# print(message.keys())
+		text += message.get('From')
+		text += ' on '
+		text += message.get('Date')
+		text += ':</p></span><br/>'
+
 		return text
 
 	def stripDuplicate(self, text):
@@ -525,25 +560,50 @@ class Plugin(arcclasses.Plugin):
 		body = re.search('(?s)<body[^>]*?>(.+)</body>',text).group(1)
 		container = text.split(body)
 		tags = re.findall(r'(?s)\s*<.+?>\s*',body)
+		print(len(tags),tags[0])
 		# Replace tags
-		stripped = re.sub(r'(?s)\s*<.+?>\s*',chr(1),body)
+		stripped = re.sub(r'(?s)\s*<.+?>\s*',chr(24),body)
 		# Replace 
 		stripped = re.sub('\xa0',' ',stripped)
 		stripped = re.sub(r'&nbsp;',' ',stripped)
+		f = open('wspace.txt','w')
+		f.write(stripped)
+		f.close()
 		spaces = re.findall(r'(?s)\s+',stripped)
+		print(len(spaces),spaces[0])
 		stripped = re.sub(r'(?s)\s+',r' ',stripped)
+		f = open('wospace.txt','w')
+		f.write(stripped)
+		f.close()
 		print("stripped")
 		_ = []
 		# for word in re.finditer(r'(?:^| )(.+?)(?:(?= )|$)',stripped):
-		for word in re.finditer(r'(?:\b)(.+?)(?:\b)',stripped):
+		for word in re.finditer(r'(?s)(?:\b)(.+?\s+?)(?:\b)',stripped):
 		# for word in re.finditer(r'(?:\s)(.+?)(?:\s)',stripped):
-			_.append((word.group(1),word.start(1),word.end(1)))
+			_.append(
+				(word.group(1),word.start(1),word.end(1))
+			)
+			if (chr(24) in _[-1][0]
+				or re.search(r'[-;:/.,=\\!?@#$%^&*()_+<>\[\]|{}]',_[-1][0])):
+				_.pop(-1)
+				# print('-> '+_.pop(-1)[0])
+				continue
 			if len(_) == num:
-				hsh = ''.join(x[0].replace(chr(1),'') for x in _).__hash__()
+				# I think its missing the collision with the dot after the 11
+				# I tried removing spaces but that doesnt seem to actually
+				# affect the results. At leasts it's vastly improved from b4
+				hsh = ''.join(x[0].replace(chr(24),'') for x in _)
+				hsh = hsh.replace(' ','')
+				hsh = hsh.__hash__()
 				if hsh not in globs:
 					globs[hsh] = []
+				else:
+					print('collision',hsh,''.join(x[0].replace(chr(24),'') for x in _),len(globs[hsh]))
 				globs[hsh].append((_[0][1],_[-1][2]))
 				_.pop(0)
+				# print('-> '+_.pop(0)[0])
+			# print(_)
+			# input()
 
 		print("globbed")
 		chains = []
@@ -573,19 +633,19 @@ class Plugin(arcclasses.Plugin):
 			lh, lt = len(head), len(tail)
 			# print(lh, lt, lh-lt)
 
-			tagsRemoved = chunk.count(chr(1))
+			tagsRemoved = chunk.count(chr(24))
 			spaceRemoved = chunk.count(' ')
 			offset += len(chunk) - tagsRemoved
 			spaces = (spaces[:head.count(' ')]
 					  + spaces[head.count(' ') + spaceRemoved:])
 
-			stripped = head + chr(1)*tagsRemoved + tail
+			stripped = head + chr(24)*tagsRemoved + tail
 		print("excised")
 
 		for s in spaces:
 			stripped = stripped.replace(' ',s,1)
 		for t in tags:
-			stripped = stripped.replace(chr(1),t,1)
+			stripped = stripped.replace(chr(24),t,1)
 		print("replaced")
 
 		return container[0] + stripped + container[1]
