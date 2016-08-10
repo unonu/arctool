@@ -127,7 +127,7 @@ class Plugin(arcclasses.Plugin):
 			self.widget.emailFilterTable.fromSerial(self.extras['filters'])
 		if 'format' in self.extras:
 			self.widget.formatEdit.setHtml(self.extras['format'])
-		if 'groups' in self.extras:
+		if 'groups' in self.extras and self.extras['groups'] != '':
 			for g in self.extras['groups'].split(','):
 				self.addGroup(g)
 
