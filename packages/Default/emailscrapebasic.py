@@ -232,7 +232,8 @@ class Plugin(arcclasses.Plugin):
 				ARCTool.getStatusBar().showMessage(
 					"Selecting mailbox..."
 				)
-				mailbox = self.widget.selectEdit.text().replace('"','\\"')
+				mailbox = self.widget.selectEdit.text()
+				mailbox = re.sub(r'(["])',r'\\\g<0>',mailbox)
 				if ((mailbox == '' or mailbox.lower() =='inbox')
 					and req == 'ALL'):
 					ARCTool.getStatusBar().showMessage(
@@ -258,11 +259,17 @@ class Plugin(arcclasses.Plugin):
 						"Fetching Messages..."
 					)
 					self.emails = []
-					for num in data[0].split():
+					_ = 1
+					nums = data[0].split()
+					for num in nums:
+						ARCTool.getStatusBar().showMessage(
+							"Fetching Message %d of %d..." %(_,len(nums))
+						)
 						typ, data = M.fetch(num, '(RFC822)')
 						self.emails.append(
 							email.message_from_bytes(data[0][1])
 						)
+						_ +=1
 					M.close()
 			except protocol.error as e:
 				ARCTool.getStatusBar().showMessage(

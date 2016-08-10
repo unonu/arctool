@@ -121,7 +121,7 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
   </widget>
   <widget class="QWidget" name="tabGroups">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -129,8 +129,26 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
    <attribute name="title">
     <string>Groups</string>
    </attribute>
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
-    <property name="leftMargin">
+
+   <layout class="QVBoxLayout" name="null">
+    <item>
+
+<widget class="QSplitter" name="horizontalLayout">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+
+   <!-- <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0"> -->
+    <!-- <property name="leftMargin">
      <number>0</number>
     </property>
     <property name="topMargin">
@@ -141,15 +159,18 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
     </property>
     <property name="bottomMargin">
      <number>0</number>
-    </property>
-    <item>
+    </property> -->
+
+
+
+    <!-- <item> -->
      <widget class="QWidget" name="browserWidget" native="true">
       <property name="enabled">
        <bool>false</bool>
       </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>1</horstretch>
+        <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -181,6 +202,12 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
        </item>
        <item>
         <widget class="QTextBrowser" name="mailBrowser">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Emails show up here after being fetched.</string>
          </property>
@@ -200,15 +227,34 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
        </item>
       </layout>
      </widget>
-    </item>
+    <!-- </item> -->
+
+
+
+
+    <widget class="QWidget" name="efgh">
+    <layout class="QHBoxLayout" name="abcd"  stretch="0,0">
+      <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+
     <item>
      <widget class="QWidget" name="groupListWidget" native="true">
-      <property name="sizePolicy">
+      <!-- <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
+      </property> -->
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="leftMargin">
         <number>0</number>
@@ -265,7 +311,7 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>40</width>
+             <width>20</width>
              <height>20</height>
             </size>
            </property>
@@ -290,6 +336,7 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
       </layout>
      </widget>
     </item>
+
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="rightMargin">
@@ -416,7 +463,14 @@ Valid operators are: '&amp;', '&amp;&amp;', '|', '||', 'and', 'or'. Use 'not' or
       </item>
      </layout>
     </item>
-   </layout>
+  </layout>
+</widget>
+
+</widget>
+
+   </item>
+ </layout>
+   <!-- </layout> -->
   </widget>
   <widget class="QWidget" name="tabFormat">
    <property name="sizePolicy">

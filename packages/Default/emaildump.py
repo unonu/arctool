@@ -321,7 +321,7 @@ class Plugin(arcclasses.Plugin):
 				passDialog.exec()
 			except:
 				ARCTool.getStatusBar().showMessage(
-					"Couldn't login to IMAP server."
+					"Couldn't login to IMAP server.", 5000
 				)
 				return -1
 
