@@ -589,18 +589,21 @@ class ARCTool(QMainWindow):
 			# s.updateContent()
 			pb.setValue(i)
 			if s.hasPlugin():
+				r=0
 				try:
 					r = self.document.addSection(s)
-				except:
+				except BaseException as e:
+					# e = sys.exc_info()[2]
+					print('nope', e)
 					r = -1
-				else:
-					if r < 0:
-						self.ui.statusBar.removeWidget(pb)
-						self.ui.statusBar.showMessage(
-							"Generation Failed At " + s.getTitle()
-						)
-						self.ui.sectionList.setCurrentRow(toc[1].index(s))
-						return
+				# else:
+				if r < 0:
+					self.ui.statusBar.removeWidget(pb)
+					self.ui.statusBar.showMessage(
+						"Generation Failed At " + s.getTitle()
+					)
+					self.ui.sectionList.setCurrentRow(toc[1].index(s))
+					return
 			self.ui.statusBar.showMessage("Generating Report...")
 			i += 1
 

@@ -231,11 +231,11 @@ class Plugin(arcclasses.Plugin):
 			cursor.setBlockFormat(_b)
 		if self.igImages:
 			doc.setHtml(self.stripImages(doc.toHtml()))
-			print('images stripped')
+			# print('images stripped')
 
 		if self.igDup:
 			doc.setHtml(self.stripDuplicate(doc.toHtml()))
-			print('duplicates stripped')
+			# print('duplicates stripped')
 		# Delimiter (before ples strip in case we accdntly lose a marker)
 		doc.setHtml(doc.toHtml().replace(chr(26),self.delim))
 		if self.addHeader:
@@ -261,13 +261,13 @@ class Plugin(arcclasses.Plugin):
 					# print(text)
 					plc.removeSelectedText()
 				go = plc.movePosition(plc.NextBlock)
-			print('pleasantries forgone')
+			# print('pleasantries forgone')
 		print(doc.toHtml().count(chr(29)))
 
 
 		if self.igSpace:
 			doc.setHtml(self.collapseSpace(doc.toHtml()))
-			print('whitespace stripped')
+			# print('whitespace stripped')
 
 		# print("generated")
 		return doc
@@ -560,52 +560,47 @@ class Plugin(arcclasses.Plugin):
 		body = re.search('(?s)<body[^>]*?>(.+)</body>',text).group(1)
 		container = text.split(body)
 		tags = re.findall(r'(?s)\s*<.+?>\s*',body)
-		print(len(tags),tags[0])
 		# Replace tags
 		stripped = re.sub(r'(?s)\s*<.+?>\s*',chr(24),body)
 		# Replace 
 		stripped = re.sub('\xa0',' ',stripped)
 		stripped = re.sub(r'&nbsp;',' ',stripped)
-		f = open('wspace.txt','w')
-		f.write(stripped)
-		f.close()
+		# Uncomment these two file sections to output stripped to files
+		# Useful for regex testing
+		# f = open('wspace.txt','w')
+		# f.write(stripped)
+		# f.close()
 		spaces = re.findall(r'(?s)\s+',stripped)
-		print(len(spaces),spaces[0])
 		stripped = re.sub(r'(?s)\s+',r' ',stripped)
-		f = open('wospace.txt','w')
-		f.write(stripped)
-		f.close()
-		print("stripped")
+		# f = open('wospace.txt','w')
+		# f.write(stripped)
+		# f.close()
+		# print("stripped")
 		_ = []
-		# for word in re.finditer(r'(?:^| )(.+?)(?:(?= )|$)',stripped):
-		for word in re.finditer(r'(?s)(?:\b)(.+?\s+?)(?:\b)',stripped):
-		# for word in re.finditer(r'(?:\s)(.+?)(?:\s)',stripped):
+		for word in re.finditer(
+			# r'(?s)(?:(.+?[\s]+?)(?:\b))|(.+?)$',stripped):
+			# r'(?s)(?:(.+?[\s]+))|(.+?)$',stripped):
+			# r'(?s)(?:(.+?(?:\s|)+(?=[\w ])))|(.+?)$',stripped):
+			r'(?s)(?:(.+?(?:\s|(?:(?![., ])))+))|(.+?)$',stripped):
+
 			_.append(
-				(word.group(1),word.start(1),word.end(1))
+				(word.group(1),word.start(1),word.end(1)) if word.group(1) else
+				(word.group(2),word.start(2),word.end(2))
 			)
-			if (chr(24) in _[-1][0]
-				or re.search(r'[-;:/.,=\\!?@#$%^&*()_+<>\[\]|{}]',_[-1][0])):
-				_.pop(-1)
-				# print('-> '+_.pop(-1)[0])
-				continue
 			if len(_) == num:
-				# I think its missing the collision with the dot after the 11
-				# I tried removing spaces but that doesnt seem to actually
-				# affect the results. At leasts it's vastly improved from b4
 				hsh = ''.join(x[0].replace(chr(24),'') for x in _)
 				hsh = hsh.replace(' ','')
 				hsh = hsh.__hash__()
 				if hsh not in globs:
 					globs[hsh] = []
-				else:
-					print('collision',hsh,''.join(x[0].replace(chr(24),'') for x in _),len(globs[hsh]))
+				# else:
+					# print('collision',hsh,
+					# ''.join(x[0].replace(chr(24),'') for x in _).replace(' ', ''),
+					# len(globs[hsh])+1)
 				globs[hsh].append((_[0][1],_[-1][2]))
 				_.pop(0)
-				# print('-> '+_.pop(0)[0])
-			# print(_)
-			# input()
 
-		print("globbed")
+		# print("globbed")
 		chains = []
 		ranges = []
 		for d in globs:
@@ -620,7 +615,7 @@ class Plugin(arcclasses.Plugin):
 				chains[-1][1] = r[1]
 			elif r[0] > chains[-1][1]:
 				chains.append([r[0],r[1]])
-		print("chained")
+		# print("chained")
 		# Only remove the text but keep the tags
 		offset = 0
 		# print('#chains=',len(chains))
@@ -640,12 +635,12 @@ class Plugin(arcclasses.Plugin):
 					  + spaces[head.count(' ') + spaceRemoved:])
 
 			stripped = head + chr(24)*tagsRemoved + tail
-		print("excised")
+		# print("excised")
 
 		for s in spaces:
 			stripped = stripped.replace(' ',s,1)
 		for t in tags:
 			stripped = stripped.replace(chr(24),t,1)
-		print("replaced")
+		# print("replaced")
 
 		return container[0] + stripped + container[1]
