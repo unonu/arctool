@@ -423,6 +423,11 @@ class Plugin(arcclasses.Plugin):
 
 	def stripPleasantries(self,text):
 		return text
+		# Pleasantries are currently being stripped just based on the length
+		# of the block they're in. This can be inaccurate tho, so the bellow
+		# code was supposed to look at the derivative of the line lengths and
+		# use maxima/minima to determine leading and trailing blocks and then
+		# remove those. It doesn't work. Something to do with the tag stripping
 
 		# deltas = []
 		# blocks = re.split('<br/?>',text)

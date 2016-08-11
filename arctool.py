@@ -239,7 +239,7 @@ class ARCTool(QMainWindow):
 		if self.removeDialog.buttonRole(b) == QMessageBox.YesRole:
 			self.profile.removeSection()
 
-	def setIsSaved(self,saved):
+	def setIsSaved(self,saved=True):
 		self.isSaved = saved
 
 	def newProfile(self):
@@ -264,7 +264,7 @@ class ARCTool(QMainWindow):
 		self.setContext('None')
 		self.profile.setListWidget(self.ui.sectionList)
 		self.ui.profileName.setText(self.profile.getName())
-		self.setIsSaved(True)
+		self.setIsSaved()
 		self.updateTitle()
 		self.updatePluginTools()
 
@@ -450,9 +450,10 @@ class ARCTool(QMainWindow):
 		self.ui.profileName.setText(self.profile.getName())
 		self.ui.sectionList.setCurrentRow(0)
 		self.updatePluginTools()
-		self.setIsSaved(True)
+		self.setIsSaved()
 		self.updateTitle()
 
+	'''Save profiles to disk. The format is a loose markup language.'''
 	def saveProfile(self,saveAs=False):
 		name = self.profile.getName().replace(' ', '_') + ".arp"
 		path = None
@@ -487,7 +488,7 @@ class ARCTool(QMainWindow):
 		data = "<profile name=\"%s\" sections=%d>\n\t%s</profile>\n"\
 			%(self.profile.getName(),len(toc[1]),data)
 		file.write(data)
-		self.setIsSaved(True)
+		self.setIsSaved()
 		self.updateTitle()
 		self.ui.statusBar.showMessage("Saved Profile as %s" %name)
 		return 0

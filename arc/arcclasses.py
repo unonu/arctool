@@ -250,10 +250,6 @@ class Package():
 				m.setupUi()
 
 		return m
-		# except:
-		# 	print("Unable to load plugin %s" %path)
-		# 	return None
-
 
 class Plugin():
 	def __init__(self,name="None",package=None):
@@ -413,8 +409,6 @@ class DateContext(Context):
 		self.ui.checkEnd.stateChanged.connect(self.updateEnd)
 		self.ui.dateEnd.dateChanged.connect(self.updateEnd)
 
-		print(self.getMonth("Name"))
-
 	def getWidget(self):
 		return self.widget
 
@@ -503,6 +497,8 @@ class TimeContext(Context):
 		dateTime = QDateTime.currentDateTime()
 		self.begin = dateTime.time()
 		self.end = dateTime.time()
+		self.hasBegin = False
+		self.hasEnd = False
 
 		from ui.timecontextwidget import Ui_TimeContextWidget
 		self.ui = Ui_TimeContextWidget()
@@ -516,8 +512,8 @@ class TimeContext(Context):
 		self.ui.timeBegin.timeChanged.connect(self.updateBegin)
 		self.ui.checkEnd.stateChanged.connect(self.updateEnd)
 		self.ui.timeEnd.timeChanged.connect(self.updateEnd)
-		self.updateBegin()
-		self.updateEnd()
+		# self.updateBegin()
+		# self.updateEnd()
 
 	def getWidget(self):
 		return self.widget
@@ -559,6 +555,40 @@ class TimeContext(Context):
 			valid = time <= self.end and valid
 
 		return valid
+
+	# Access
+	def getBegin(self,format=None):
+		if self.hasBegin:
+			return self.begin if not format else self.begin.toString(format)
+
+	def getEnd(self,format=None):
+		if self.hasEnd:
+			return self.end if not format else self.end.toString(format)
+
+	def getMinute(self,format):
+		ct = QTime.currentTime()
+		return {
+			"long" : ct.toString("mm"),
+			"short" : ct.toString("m"),
+		}[format.lower()]
+
+	def getHour(self,format):
+		ct = QTime.currentTime()
+		return {
+			"long" : ct.toString("hh"),
+			"short" : ct.toString("h"),
+		}[format.lower()]
+
+	def getSecond(self,format):
+		ct = QTime.currentTime()
+		return {
+			"long" : ct.toString("ss"),
+			"short" : ct.toString("s"),
+			"precise" : ct.toString("ss.zzz"),
+		}[format.lower()]
+
+	def toString(self,format):
+		return QTime.currentTime().toString(format)
 
 def PackOptions(opts):
 	pack = ''
