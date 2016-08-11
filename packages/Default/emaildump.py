@@ -495,6 +495,12 @@ class Plugin(arcclasses.Plugin):
 
 		return text
 
+	'''Loop through assosciated message IDs and remove their text from this
+	message. This might be able to be done earlier by just filtering out the
+	latest id when inserting the message, but determining which message id
+	is the right one in a reply is tough because no one follows the standard.
+	It's safer to simply place all the text first and remove it later if
+	asked.'''
 	def stripReplies(self,message,text):
 		ids = message.get("References")
 		if ids:
@@ -561,6 +567,10 @@ class Plugin(arcclasses.Plugin):
 
 		return text
 
+	'''This excises all of the tags and spaces to normalise the text. then
+	it hashes chunks of the text to find collisions. Regions of collisions
+	are excised leaving any tags or spaces in that region. When the document
+	is reconstructed, there will be many empty tags and repeating spaces.'''
 	def stripDuplicate(self, text):
 		num = self.widget.dupStrength.value()
 		globs = {}
@@ -569,7 +579,7 @@ class Plugin(arcclasses.Plugin):
 		tags = re.findall(r'(?s)\s*<.+?>\s*',body)
 		# Replace tags
 		stripped = re.sub(r'(?s)\s*<.+?>\s*',chr(24),body)
-		# Replace 
+		# Replace non-breaking spaces
 		stripped = re.sub('\xa0',' ',stripped)
 		stripped = re.sub(r'&nbsp;',' ',stripped)
 		# Uncomment these two file sections to output stripped to files
@@ -606,8 +616,9 @@ class Plugin(arcclasses.Plugin):
 					# len(globs[hsh])+1)
 				globs[hsh].append((_[0][1],_[-1][2]))
 				_.pop(0)
-
 		# print("globbed")
+
+		# Chains are the overlapping composites of all ranges 
 		chains = []
 		ranges = []
 		for d in globs:
@@ -644,10 +655,14 @@ class Plugin(arcclasses.Plugin):
 			stripped = head + chr(24)*tagsRemoved + tail
 		# print("excised")
 
+		# Replace spaces and tags at their markers
 		for s in spaces:
 			stripped = stripped.replace(' ',s,1)
 		for t in tags:
 			stripped = stripped.replace(chr(24),t,1)
 		# print("replaced")
+
+		# Should remove any headers for empty sections here if
+		# we're supposed to add headers.
 
 		return container[0] + stripped + container[1]
