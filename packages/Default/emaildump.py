@@ -480,11 +480,13 @@ class Plugin(arcclasses.Plugin):
 		text = re.sub('\xa0',' ',text)
 		text = re.sub(' +',' ',text)
 
-		# Collapse Breaks
+		# Collapse Breaks/Paragraphs/Spans/Divs
 		text = re.sub(r'(?s)<br>\s*(?:</br>)?','<br/>',text)
 		text = re.sub(r'(?s)(?<=>)\s*<br\s*/?>\s*(?=<)', '',text)
-		text = re.sub(r'(?s)\s*<span( [^>]+)?>\s*</span>\s*','',text)
 		text = re.sub(r'(?s)\s*<p( [^>]+)?>\s*</p>\s*','',text)
+		text = re.sub(r'(?s)\s*<span( [^>]+)?>\s*</span>\s*','',text)
+		text = re.sub(r'(?s)\s*<div( [^>]+)?>\s*</div>\s*','',text)
+		text = re.sub(r'(?s)(?<=>)\s*<br\s*/?>\s*(?=<)', '',text) #bandaid
 
 		return text
 

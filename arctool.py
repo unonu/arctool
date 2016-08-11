@@ -489,6 +489,7 @@ class ARCTool(QMainWindow):
 		file.write(data)
 		self.setIsSaved(True)
 		self.updateTitle()
+		self.ui.statusBar.showMessage("Saved Profile as %s" %name)
 		return 0
 
 	def updateTitle(self):
