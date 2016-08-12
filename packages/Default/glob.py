@@ -1,5 +1,20 @@
-''' HEY DON'T USE DISCONNECTED GLOBS UNTIL I FIGURE OUT HOW TO ACCOUNT
+''' HEY DON'T USE DISCONNECTED GLOBS UNTIL WE FIGURE OUT HOW TO ACCOUNT
 FOR THEM IN THE GLOBITEM OKAYTHANKSBYE
+
+If it isn't evident by now, I'm no expert on text classification or NLP,
+so most of this is based purely on intuition. The general hope is to
+somehow implement a method to match similar text without storing the
+actual text or needing to retrieve the text. In this case, this was done
+by aggregating and averaging certain features from the selected text.
+The resultant numbers are then truncated as necessary and composited
+into a 96 bit string/number for serialisation. I mean, you definitely
+lose information with the truncate, but when the glob is reconstituted,
+it uses word/block divisions to sort of make up for it. So I don't think
+it's a terrible implementation. That being said, this is something that
+probably requires months of research and someone has probably already
+implemented something like this...
+
+Also this doesn't look at word meaning or context, just position and length.
 '''
 
 from PyQt5.QtGui import QTextCursor
@@ -17,8 +32,9 @@ class Glob(object):
 		self.wc = 1	# Word count
 		self.lc = 1	# Line count
 		self.dev = 0.0	# Deviation (stdev/mean)
-		self.num = '0'*12 # Unique number, independant of text. 96 bits
+		self.num = '0'*12 # Unique number, independent of text. 96 bits
 		if len(curs) > 0:
+			print(curs)
 			self.setValue(*curs)
 
 	def __str__(self):
@@ -69,7 +85,7 @@ class Glob(object):
 		# 16  16  10  10   2   2  10  10  10  10
 		#sta end sta end cla sub cov  wc  lc dev
 
-		# Each of these is 16 bits
+		# Each variable is 16 bits
 		a = (self.sta[0] & 65535)
 
 		b = (self.end[0] & 65535)
@@ -139,14 +155,14 @@ class Glob(object):
 			self.cla = 0 if l < .25 else 1 if l < .66 else 2
 
 		self.cov = len(self.val)/doc.characterCount()
-		self.wc  = len(self.val.split())
-		self.lc  = len(spl)
+		self.wc = len(self.val.split())
+		self.lc = len(spl)
 
 		# split the words
 		spl = self.val.split()
 		# store their lengths
 		les = [len(s) for s in spl]
-		# get the occurances of each length
+		# get the occurrences of each length
 		cou = dict((les.count(l),l) for l in set(les))
 
 		# mean of the lengths
@@ -157,10 +173,10 @@ class Glob(object):
 		
 		# find the mode of 'les'
 		mod = cou[max(cou)]
-		# likelihood any lenth won't be the mode
+		# likelihood any length won't be the mode
 		dif = (len(spl) - max(cou)) / len(spl)
 
-		# figure out how to incorporate the dif
+		# figure out how to incorporate the diff
 		self.dev = dev/mea
 
 		return self.calc()
@@ -205,34 +221,37 @@ class GlobItem():
 		self.globs.append(g)
 
 		# These properties are the same as a single glob, just (mean,stdev)
-		# Note the temprary type switch
+		# Note the temporary type switch
 		self.sta[0] = sum(g.sta[0] for g in self.globs)//len(self.globs)
 		self.sta[0] = [ self.sta[0],
-						int(sqrt(sum((g.sta[0]-self.sta[0])**2 for g in \
+						int(sqrt(sum((g.sta[0]-self.sta[0])**2 for g in
 							self.globs)/len(self.globs)))]
 		self.sta[1] = sum(g.sta[1] for g in self.globs)/len(self.globs)
 		self.sta[1] = [ self.sta[1],
-						int(sqrt(sum((g.sta[1]-self.sta[1])**2 for g in \
+						int(sqrt(sum((g.sta[1]-self.sta[1])**2 for g in
 							self.globs)/len(self.globs)))]
 		self.end[0] = sum(g.end[0] for g in self.globs)//len(self.globs)
 		self.end[0] = [ self.end[0],
-						int(sqrt(sum((g.end[0]-self.end[0])**2 for g in \
+						int(sqrt(sum((g.end[0]-self.end[0])**2 for g in
 							self.globs)/len(self.globs)))]
 		self.end[1] = sum(g.end[1] for g in self.globs)/len(self.globs)
 		self.end[1] = [ self.end[1],
-						int(sqrt(sum((g.end[1]-self.end[1])**2 for g in \
+						int(sqrt(sum((g.end[1]-self.end[1])**2 for g in
 							self.globs)/len(self.globs)))]
 
 		cou = ( sum( 1 for g in self.globs if g.cla == 0),
 				sum( 1 for g in self.globs if g.cla == 1),
 				sum( 1 for g in self.globs if g.cla == 2))
 		self.cla = cou.index(max(cou))
+		print('class for glob set to',self.sub)
 
 		cou = ( sum( 1 for g in self.globs if g.sub == 0),
 				sum( 1 for g in self.globs if g.sub == 1),
 				sum( 1 for g in self.globs if g.sub == 2))
 		self.sub = cou.index(max(cou))
+		print('sub for glob set to',self.sub)
 
+		print([g.cov for g in self.globs])
 		self.cov = sum(g.cov for g in self.globs)/len(self.globs)
 		self.cov = (self.cov,sqrt(
 			sum((g.cov-self.cov)**2 for g in self.globs)/len(self.globs)))
@@ -252,6 +271,7 @@ class GlobItem():
 		return len(self.globs)
 
 	def getText(self,doc,threshold=.3):
+		print('gt')
 		cur = QTextCursor(doc)
 		cer = 0.0 # certainty
 		cha = doc.characterCount()
@@ -262,10 +282,12 @@ class GlobItem():
 		sta = self.sta[1][0]*cha # get start relative to this doc
 		if (sta >= self.sta[0][0]-self.sta[0][1] and
 			sta <= self.sta[0][0]+self.sta[0][1]):
+			print('aaa')
 			cur.setPosition(sta) # use relative if within expectations
 			cer += .1
 		else:
 			# use hard start. doesn't boost confidence
+			print('b')
 			cur.setPosition(self.sta[0][0])
 		inb = cur.blockNumber() # cursor's starting block
 		cur.movePosition(cur.StartOfWord)
@@ -273,31 +295,36 @@ class GlobItem():
 		end = self.end[1][0]*cha
 		if (end >= self.end[0][0]-self.end[0][1] and
 			end <= self.end[0][0]+self.end[0][1]):
+			print('c')
 			cur.setPosition(end,cur.KeepAnchor)
 			cer += .1
 		else:
+			print('e')
 			cur.setPosition(self.end[0][0],cur.KeepAnchor)
 		cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
-
+		print('flag a')
 		# Match word count based on line sub classification
 		if self.cla == 0:
-			# print("I'm a line")
+			print("I'm a line")
 			if self.sub == 0:
-				# print("I'm a short line")
-				while cur.blockNumber() > inb:
-					cur.movePosition(cur.PreviousBlock,cur.KeepAnchor)
-					cur.movePosition(cur.EndOfBlock,cur.KeepAnchor)
-					# print('b2',cur.selectedText(),cur.blockNumber(), inb, self.wc)
-				while len(cur.selectedText().split()) < self.wc[0]-self.wc[1]:
-					cur.movePosition(cur.NextWord,cur.KeepAnchor)
-					cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
-					# print('a')
-				while len(cur.selectedText().split()) > self.wc[0]+self.wc[1]:
-					cur.movePosition(cur.PreviousWord,cur.KeepAnchor)
-					cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
-					# print('b',cur.selectedText(),cur.blockNumber(), inb, self.wc)
+				print("I'm a short line")
+				# while cur.blockNumber() > inb:
+				# 	cur.movePosition(cur.PreviousBlock)
+				# 	cur.movePosition(cur.EndOfBlock,cur.KeepAnchor)
+				# 	print('b2',cur.selectedText(),
+				# 		cur.blockNumber(), inb, self.wc)
+				# while len(cur.selectedText().split()) < self.wc[0]-self.wc[1]:
+				# 	cur.movePosition(cur.NextWord)
+				# 	cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
+				print('a',cur.selectedText(),
+					cur.blockNumber(), inb, self.wc)
+				# while len(cur.selectedText().split()) < self.wc[0]+self.wc[1]:
+				# 	cur.movePosition(cur.PreviousWord)
+				# 	cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
+				# 	print('b',cur.selectedText(),
+				# 		cur.blockNumber(), inb, self.wc)
 			elif self.sub == 2:
-				# print("I'm a long line")
+				print("I'm a long line")
 				if cur.blockNumber() > inb:
 					cur.movePosition(cur.PreviousBlock,cur.KeepAnchor)
 				cur.movePosition(cur.EndOfBlock,cur.KeepAnchor)
@@ -312,14 +339,18 @@ class GlobItem():
 				cur.movePosition(cur.EndOfBlock,cur.KeepAnchor)
 				# print('d')
 
+		print('flag b')
 		text = cur.selectedText() # go ahead and grab the text
 
-		# check coverage, word count, line count and deviation, etc. for more confidence
+		# check coverage, word count, line count and deviation,
+		# etc. for more confidence
 		cov = len(text)/cha
 		wc = len(text.split())
 		lc = len(text.splitlines())
 		if cur.selectionStart() <= cha*(1-self.cov[0]):
-			cer += .1 # boost confidence if there are enough characters for a match, probably
+			# boost confidence if there are enough characters for a match,
+			# ... probably
+			cer += .1
 		if cur.selectionEnd() <= cha*(1-self.cov[0]):
 			cer += .1
 		# print(cha,(sta/cha)-self.sta[1][0],self.sta[1][0])
@@ -338,7 +369,7 @@ class GlobItem():
 		# line count
 		cer += (.08 / max(1,abs(lc-self.lc[0])
 				/ zerocheck(self.lc[1], self.lc[0] )))
-		cer += .08 # stdev of word lenth
+		cer += .08 # stdev of word length
 		self.findCommon()
 		for w in text.split(): # common words
 			if w in self.common:

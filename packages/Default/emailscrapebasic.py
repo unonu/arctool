@@ -151,9 +151,8 @@ class Plugin(arcclasses.Plugin):
 	#override
 	def generate(self):
 		if not self.fetched:
-			r = self.makeRequest()
-			if r < 0:
-				return None
+			# r = self.makeRequest()
+			return None
 		doc = QTextDocument()
 		cursor = QTextCursor(doc)
 
@@ -445,7 +444,9 @@ class Plugin(arcclasses.Plugin):
 		brush = QBrush(QColor('#00e34b'))
 		highlight.setBackground(brush)
 		for s in set:
+			print('e')
 			cursor.setPosition(s[0])
+			print('f')
 			cursor.setPosition(s[1],cursor.KeepAnchor)
 			cursor.mergeCharFormat(highlight)
 		cursor.endEditBlock()
@@ -456,31 +457,47 @@ class Plugin(arcclasses.Plugin):
 			item = GlobItem()
 			for message in self.groups[g]:
 				doc = QTextDocument()
-
+				print('message in', g)
+				body = ''
 				for part in message.walk():
 					typ = part.get_content_type()
 					dis = part.get('Content-Disposition')
 					if dis != 'attachment':
 						if typ == 'text/plain':
-							body = ''
+							body += '<p>'
+							ptbody = ''
 							try:
-								body = part.get_payload(decode=True).decode('utf-8')
+								ptbody = (part.get_payload(decode=True)
+										.decode('utf-8'))
 							except UnicodeDecodeError:
-								body = quopri.decodestring(part.get_payload()).decode('utf-8')
-							doc.setPlainText(body)
+								ptbody = (quopri.decodestring(
+										part.get_payload()).decode('utf-8'))
+							ptbody = re.sub('\r?\n','<br/>',ptbody)
+							body += ptbody + '</p>'
+							# doc.setPlainText(body)
 						elif typ == 'text/html':
-							body = ''
 							try:
-								body = part.get_payload(decode=True).decode('utf-8')
+								body += (part.get_payload(decode=True)
+										.decode('utf-8'))
 							except UnicodeDecodeError:
-								body = quopri.decodestring(part.get_payload()).decode('utf-8')
-							doc.setHtml(body)
+								body += (quopri.decodestring(part.get_payload())
+										.decode('utf-8'))
+				doc.setHtml(body)
 				curs = []
 				for p in self.groups[g][message]:
 					curs.append(QTextCursor(doc))
+					print(p,doc.characterCount())
+					print('g')
 					curs[-1].setPosition(p[0])
+
+					print('h')
 					curs[-1].setPosition(p[1],curs[-1].KeepAnchor)
+
+					if curs[-1].selectedText() == '':
+						print('empty selection; popped')
+						curs.pop()
 				if len(curs) > 0:
+					print('adding globs')
 					item + Glob(*curs)
 			self.items[g] = item
 
@@ -508,7 +525,9 @@ class Plugin(arcclasses.Plugin):
 			parts = [p for p in message.walk()]
 			i=0
 			for part in parts:
-				typ, dis = part.get_content_type(), part.get('Content-Disposition')
+				typ = part.get_content_type()
+				dis = part.get('Content-Disposition')
+
 				if part.is_multipart():
 					for sp in reversed([s for s in part.walk()]):
 						if sp not in parts:
@@ -520,12 +539,14 @@ class Plugin(arcclasses.Plugin):
 					try:
 						body = part.get_payload(decode=True).decode('utf-8')
 					except UnicodeDecodeError:
-						body = quopri.decodestring(part.get_payload()).decode('utf-8')
+						body = (quopri.decodestring(part.get_payload())
+								.decode('utf-8'))
 				elif typ == 'text/plain' and dis == None and body == '':
 					try:
 						body = part.get_payload(decode=True).decode('utf-8')
 					except UnicodeDecodeError:
-						body = quopri.decodestring(part.get_payload()).decode('utf-8')
+						body = (quopri.decodestring(part.get_payload())
+								.decode('utf-8'))
 				elif typ[:typ.find('/')] == 'image' and self.igImages:
 					# Embed image
 					dis = dis.split(';',1)
@@ -541,19 +562,21 @@ class Plugin(arcclasses.Plugin):
 				cur = doc.find('$%s$'%(group),0,
 							   options=doc.FindCaseSensitively
 				)
-				# print('find $%s$: %s' %(group, 'FAIL' if cur.isNull() else 'OK'))
+				# print('find $%s$: %s' %(group, 'FAIL' if cur.isNull()
+											# else 'OK'))
+				print('loop', len(self.groups))
 				text, ok, perc = self.items[group].getText(ref)
 				# print('find starting at %d: %s %f' %(i,text,perc))
 				while not cur.isNull():
 					# Use the GlobItem to get text from the ref document
 					if not ok:
 						cur.insertHtml(
-							('<span style="color:red; font-weight:bold">%s '\
-							+ '[%0.1f%% certainty]</span>') %(text,perc*100))
+							('<span style="color:red; font-weight:bold">%s '
+							 '[%0.1f%% certainty]</span>') %(text,perc*100))
 					elif perc < .6:
 						cur.insertHtml(
-							('<span style="color:red">%s [%0.1f%% certainty]<'\
-							+ '/span>') %(text,perc*100))
+							('<span style="color:red">%s [%0.1f%% certainty]<'
+							 '/span>') %(text,perc*100))
 					else:
 						cur.insertText(text)
 

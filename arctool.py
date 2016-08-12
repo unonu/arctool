@@ -6,6 +6,7 @@ import os
 import tarfile
 import tempfile
 import importlib
+import traceback
 
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -595,8 +596,9 @@ class ARCTool(QMainWindow):
 				try:
 					r = self.document.addSection(s)
 				except BaseException as e:
-					# e = sys.exc_info()[2]
 					print('nope', e)
+					trace = sys.exc_info()[2]
+					print(*traceback.format_tb(trace))
 					r = -1
 				# else:
 				if r < 0:

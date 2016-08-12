@@ -236,7 +236,7 @@ class Plugin(arcclasses.Plugin):
 		if self.igDup:
 			doc.setHtml(self.stripDuplicate(doc.toHtml()))
 			# print('duplicates stripped')
-		# Delimiter (before ples strip in case we accdntly lose a marker)
+		# Delimiter (before ples strip in case we accidentally lose a marker)
 		doc.setHtml(doc.toHtml().replace(chr(26),self.delim))
 		if self.addHeader:
 			text = doc.toHtml()
@@ -447,7 +447,7 @@ class Plugin(arcclasses.Plugin):
 		# blockIndex = [
 		# 	len(blocks[x]) + len(breaks[x]) for x in range(len(breaks))
 		# ] + [len(blocks[-1])]
-		# print('block indicies', blockIndex)
+		# print('block indices', blockIndex)
 		# for i in range(1,len(blocks)):
 		# 	blockIndex[i] += blockIndex[i-1]
 
@@ -495,7 +495,7 @@ class Plugin(arcclasses.Plugin):
 
 		return text
 
-	'''Loop through assosciated message IDs and remove their text from this
+	'''Loop through associated message IDs and remove their text from this
 	message. This might be able to be done earlier by just filtering out the
 	latest id when inserting the message, but determining which message id
 	is the right one in a reply is tough because no one follows the standard.
@@ -558,7 +558,8 @@ class Plugin(arcclasses.Plugin):
 		return text
 
 	def getHeader(self, message):
-		text = '<br/><span><p style="text-align:center;font-weight:bold;">From '
+		text = ('<br/><span><p style="text-align:center;font-weight:bold;"'
+			'>From ')
 		# print(message.keys())
 		text += message.get('From')
 		text += ' on '
@@ -612,7 +613,8 @@ class Plugin(arcclasses.Plugin):
 					globs[hsh] = []
 				# else:
 					# print('collision',hsh,
-					# ''.join(x[0].replace(chr(24),'') for x in _).replace(' ', ''),
+					# ''.join(x[0].replace(chr(24),'') for x in _)
+						#.replace(' ', ''),
 					# len(globs[hsh])+1)
 				globs[hsh].append((_[0][1],_[-1][2]))
 				_.pop(0)
