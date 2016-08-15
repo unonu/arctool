@@ -277,7 +277,7 @@ class ARCTool(QMainWindow):
 			"Automatic Report Profile (*.arp)"
 		)[0]
 		
-		if path is None or path[0] == '':
+		if path is None or path == '':
 			return
 
 		self.profilePath = path
@@ -618,11 +618,6 @@ class ARCTool(QMainWindow):
 
 		return
 
-	# def exportReport(self):
-	# 	self.ui.statusBar.showMessage("Exporting Report")
-	# 	ARCD.pdfExport(self.document)
-	# 	self.ui.statusBar.showMessage("Finished Exporting Report")
-
 	def openPackageArchive(self,path=None):
 		path = path or QFileDialog.getOpenFileName(
 			self,"Open Profile",None,
@@ -631,27 +626,36 @@ class ARCTool(QMainWindow):
 		self.installPackage(path)
 
 	def installPackage(self,path):
+		if path == '':
+			return
+
 		pkgName = os.path.basename(path).split('.',1)[0]
 		msg = QMessageBox(self)
 		msg.setWindowTitle('Install Package')
-		msg.setStandardButtons(QMessageBox.Ok)
+		msg.setStandardButtons(msg.Ok)
 		with tarfile.open(path,'r:gz') as archive:
 			path = os.path.join(self.storagePath, "packages", pkgName)
-
+			clean = False
 			try:
 				os.mkdir(path)
 			except FileExistsError:
 				print("A package by this name already exists")
-				msg.setText('A package by this name already exists.')
+				msg.setText('A package by this name already exists. Would you'
+					' like to update it?')
 				self.ui.statusBar.showMessage(
 					"A package by this name already exists.")
-				msg.exec()
-				# This should actually update the package instead...
-				return
+				msg.setStandardButtons(msg.Yes|msg.No)
+				r = msg.exec()
+				if r == msg.Yes:
+					msg.setStandardButtons(msg.Ok)
+					self.ui.statusBar.showMessage(
+						'Updating package "%s"...' %pkgName)
+					clean = True
+				else:
+					return
 
 			names = archive.getnames()
 			if ('__init__.py' not in names):
-
 				os.rmdir(path)
 				msg.setText('The package is malformed.')
 				self.ui.statusBar.showMessage("The package is malformed.")
@@ -684,13 +688,25 @@ class ARCTool(QMainWindow):
 				msg.exec()
 				return
 
+			# Clean the plugin directory
+			if clean:
+				for name in os.listdir(path):
+					try:
+						os.remove(os.path.join(path,name))
+					except:
+						pass
+
 			for name in names:
 				# Check for malicious intent? ;p
 				if re.match(r'^((\.\.)|\.[/\\]|/|[A-Za-z]+:\\)', name):
+					print('d',name)
 					return
+				print(name)
 				archive.extract(name,path,numeric_owner=True)
 
-		msg.setText('The package was succesfully installed')
+		self.ui.statusBar.showMessage(
+			"The package was successfully installed.", 5000)
+		msg.setText('The package was successfully installed.')
 		msg.exec()
 		self.loadPackages()
 		return

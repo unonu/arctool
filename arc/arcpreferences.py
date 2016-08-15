@@ -19,6 +19,10 @@ class PreferenceManager(QDialog):
 			PreferenceManager.ui.buttonBox.accepted.connect(
 				PreferenceManager.storeForm
 			)
+			PreferenceManager.ui.buttonBox.rejected.connect(
+				lambda: (PreferenceManager.loadPreferences(),
+					PreferenceManager.updateForm() )
+			)
 			PreferenceManager.ui.treeWidget.currentItemChanged.connect(
 				PreferenceManager.updateForm
 			)
@@ -36,13 +40,14 @@ class PreferenceManager(QDialog):
 					twi.addChild(child)
 
 				PreferenceManager.ui.treeWidget.addTopLevelItem(twi)
-			PreferenceManager.loadPreferences()
-			PreferenceManager.ui.treeWidget.sortItems(0,0)
-			PreferenceManager.ui.treeWidget.setCurrentItem(
-				PreferenceManager.ui.treeWidget.itemAt(0,0)
-			)
-
 			PreferenceManager.__init = True
+
+		PreferenceManager.loadPreferences()
+		PreferenceManager.ui.treeWidget.sortItems(0,0)
+		PreferenceManager.ui.treeWidget.setCurrentItem(
+			PreferenceManager.ui.treeWidget.itemAt(0,0)
+		)
+		PreferenceManager.updateForm()
 
 	@staticmethod
 	def getPreference(package,name,sub=''):
@@ -73,7 +78,7 @@ class PreferenceManager(QDialog):
 												   [item.text(0)]
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
-
+		# PreferenceManager.storeForm(False)
 		PreferenceManager.ui.formWidget.setParent(None)
 		PreferenceManager.ui.horizontalLayout.removeWidget(
 			PreferenceManager.ui.formWidget
@@ -90,44 +95,51 @@ class PreferenceManager(QDialog):
 				w = QLineEdit()
 				# print(params)
 				w.setText(
-					params['value'] if ('value' in params and params['value'])\
-					else params['default'] if 'default' in params \
+					params['value'] if ('value' in params and params['value'])
+					else params['default'] if 'default' in params 
 					else ''
 				)
 				w.setPlaceholderText(
-					params['placeholder'] if 'placeholder' in params \
+					params['placeholder'] if 'placeholder' in params 
 					else ''
 				)
+				w.textEdited.connect(
+					lambda: PreferenceManager.storeForm(False))
 			elif params['type'] == 'check':
 				w = QCheckBox()
 				w.setChecked(
 					bool(params['value'] if ('value' in params and
-											 params['value']) \
-					else params['default'] if 'default' in params \
+											 params['value']) 
+					else params['default'] if 'default' in params 
 					else False)
 				)
+				w.toggled.connect(lambda: PreferenceManager.storeForm(False))
 			elif params['type'] == 'number':
 				w = QSpinBox()
 				w.setValue(
 					int(params['value'] if ('value' in params and
-											params['value']) \
-					else params['default'] if 'default' in params \
+											params['value']) 
+					else params['default'] if 'default' in params 
 					else 0)
 				)
+				w.valueChanged.connect(
+					lambda: PreferenceManager.storeForm(False))
 			elif params['type'] == 'choice':
 				w = QComboBox()
 				w.setItems(
 					[
-						x for x in (params['placeholder'].split(',') \
+						x for x in (params['placeholder'].split(',') 
 						if 'placeholder' in params else '--')
 					]
 				)
 				w.setIndex(
 					int(params['value'] if ('value' in params and
-											params['value']) \
-					else params['default'] if 'default' in params \
+											params['value']) 
+					else params['default'] if 'default' in params 
 					else 0)
 				)
+				w.currentIndexChanged.connect(
+					lambda: PreferenceManager.storeForm(False))
 
 			w.setToolTip(params['tooltip'] if 'tooltip' in params else '')
 			w.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Minimum)
@@ -141,7 +153,7 @@ class PreferenceManager(QDialog):
 		PreferenceManager.ui.horizontalLayout.update()
 
 	@staticmethod
-	def storeForm():
+	def storeForm(save=True):
 		package = None
 		item = PreferenceManager.ui.treeWidget.currentItem()
 		child = True if item.parent() else False
@@ -152,7 +164,10 @@ class PreferenceManager(QDialog):
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
 
+		# print(package)
+
 		for k in sorted(package.keys()):
+			# print(k)
 			params = package[k]
 			if 'widget' in params:
 				params['value'] = {
@@ -162,7 +177,8 @@ class PreferenceManager(QDialog):
 					'choice': lambda: params['widget'].currentText()
 				}[params['type']]()
 		# print(package)
-		PreferenceManager.savePreferences()
+		if save:
+			PreferenceManager.savePreferences()
 
 	@staticmethod
 	def savePreferences():
@@ -181,15 +197,12 @@ class PreferenceManager(QDialog):
 							 str(params['label']),
 							 str(params['type']),
 							 str({
-								'string': lambda: params['widget'].text(),
-								'check': lambda: int(
-									params['widget'].isChecked()
-								),
-								'number': lambda: params['widget'].value(),
-								'choice': lambda: params['widget']\
-													.currentText()
+								'string': lambda: params['value'],
+								'check': lambda: int(params['value']),
+								'number': lambda: params['value'],
+								'choice': lambda: params['value']
 							 }[params['type']]())\
-							 	if 'widget' in params else '',
+							 	if 'value' in params else '',
 							 str(params['default'])\
 							 	if 'default' in params else '',
 							 str(params['placeholder'])\

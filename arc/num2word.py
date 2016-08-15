@@ -1,5 +1,7 @@
 def num2word(num):
-	words = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","twen","thir","four","fif","six","seven","eigh","nine"]
+	words = ["zero","one","two","three","four","five",
+		"six","seven","eight","nine","ten","eleven","twelve",
+		"twen","thir","four","fif","six","seven","eigh","nine"]
 	ab_num = abs(int(num))
 	val = ''
 	#more
@@ -41,16 +43,17 @@ def num2word(num):
 		val += num2word(ab_num // 100) + " hundred"
 	ab_num = ab_num % 100
 	
-	if len(val) > 0:
+	if len(val) > 0 and ab_num > 0:
 		val += " and "
 	#tens
-	if ab_num < 13:
+	if ab_num == 0:
+		val += words[ab_num] if len(val) == 0 else ''
+	elif ab_num < 13:
 		val += words[ab_num]
 	elif ab_num < 20:
-		#i = ab_num % 10 + (3 if ab_num > 12 else 0)
 		val += words[ab_num + 1] + "teen"
 	elif ab_num < 100:
 		val += words[ab_num//10 + 11] + "ty"
 		val += ("-" + words[ab_num%10]) if ab_num%10 > 0 else ''
 
-	return ("negative" if num < 0 else '') + val
+	return ("negative " if num < 0 else '') + val
