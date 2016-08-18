@@ -26,13 +26,15 @@ class PreferenceManager(QDialog):
 			PreferenceManager.ui.treeWidget.currentItemChanged.connect(
 				PreferenceManager.updateForm
 			)
-			for k in sorted(PSD.getPackageNames()):
+			print('a')
+			for k in sorted(PSD.getPackageNames(True)):
+				print(k)
 				PreferenceManager.preferences[k] = {
 					'':PSD.getPackage(k).preferenceDict or {}
 				}
 				twi = QTreeWidgetItem()
 				twi.setText(0,k)
-				for m in sorted(PSD.getPluginNames(k)):
+				for m in sorted(PSD.getPluginNames(k,True)):
 					PreferenceManager.preferences[k][m] =\
 						PSD.getPluginInfo(k,m).getPreferenceDict()
 					child = QTreeWidgetItem()
@@ -70,6 +72,7 @@ class PreferenceManager(QDialog):
 	@staticmethod
 	def updateForm():
 		item = PreferenceManager.ui.treeWidget.currentItem()
+		if item is None: return
 		child = True if item.parent() else False
 			
 		package = None
@@ -78,7 +81,6 @@ class PreferenceManager(QDialog):
 												   [item.text(0)]
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
-		# PreferenceManager.storeForm(False)
 		PreferenceManager.ui.formWidget.setParent(None)
 		PreferenceManager.ui.horizontalLayout.removeWidget(
 			PreferenceManager.ui.formWidget
@@ -93,7 +95,6 @@ class PreferenceManager(QDialog):
 			w = None
 			if params['type'] == 'string':
 				w = QLineEdit()
-				# print(params)
 				w.setText(
 					params['value'] if ('value' in params and params['value'])
 					else params['default'] if 'default' in params 
@@ -164,10 +165,7 @@ class PreferenceManager(QDialog):
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
 
-		# print(package)
-
 		for k in sorted(package.keys()):
-			# print(k)
 			params = package[k]
 			if 'widget' in params:
 				params['value'] = {
@@ -176,7 +174,6 @@ class PreferenceManager(QDialog):
 					'number': lambda: params['widget'].value(),
 					'choice': lambda: params['widget'].currentText()
 				}[params['type']]()
-		# print(package)
 		if save:
 			PreferenceManager.savePreferences()
 

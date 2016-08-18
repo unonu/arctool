@@ -409,8 +409,9 @@ class Plugin(arcclasses.Plugin):
 
 		matches = []
 		for s in set:
-			if ((beg >= s[0] and beg < s[1]) or (end <= s[1] and end > s[0]) or
-					(s[0] >= beg and s[1] <= end)):
+			if ((beg >= s[0] and beg < s[1])
+				or (end <= s[1] and end > s[0])
+				or (s[0] >= beg and s[1] <= end)):
 				matches.append(s)
 
 		for m in matches:

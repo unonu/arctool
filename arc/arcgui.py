@@ -12,8 +12,13 @@ class PluginSelectDialog(QDialog):
 	# works for now, and this memo exists, so it can be taken care of later.
 	parent = None
 	ui = None
-	packages = None
-	pluginInfo = None
+	# Holds package objects. Real name is p.name, nice name is p.getName()
+	# Indices are numbers
+	packageInfo = {}
+	packageIndices = {}
+	# Holds plugin objects. Real name is p.name, nice name is p.getName()
+	# Indices are package real names -> plugin real names
+	pluginInfo = {}
 	__init = False
 
 	def __init__(self,parent):
@@ -24,7 +29,6 @@ class PluginSelectDialog(QDialog):
 			PluginSelectDialog.ui.setupUi(self)
 
 			PluginSelectDialog.parent = parent
-			PluginSelectDialog.updateModuleList()
 			PluginSelectDialog.ui.packageList.currentItemChanged.connect(
 				PluginSelectDialog.updatePluginList
 			)
@@ -33,33 +37,49 @@ class PluginSelectDialog(QDialog):
 			)
 			self.setWindowTitle("Select Plugin")
 
-			PluginSelectDialog.pluginInfo = {}
+			# PluginSelectDialog.updatePackageList()
 			PluginSelectDialog.updatePluginList()
 			PluginSelectDialog.ui.packageList.setCurrentRow(0)
 			PluginSelectDialog.__init = True
 
+	# Update packageInfo with packages and add their nice names to the list
+	# Also map the real names to the indices in the info list
+	# Also create an entry in the pluginInfo list for each package's plugins
 	@staticmethod
-	def updateModuleList():
-		PluginSelectDialog.packages = sorted(PluginSelectDialog.parent.packages)
+	def updatePackageList():
+		print(PluginSelectDialog.parent.packages)
+		PluginSelectDialog.packageInfo = sorted(
+			PluginSelectDialog.parent.packages)
 		PluginSelectDialog.ui.packageList.clear()
-		PluginSelectDialog.ui.packageList.addItems(
-			[p.getName() for p in PluginSelectDialog.packages]
-		)
+		PluginSelectDialog.packageIndices = {}
+		for p in PluginSelectDialog.packageInfo:
+			PluginSelectDialog.packageIndices[p.name] = len(
+				PluginSelectDialog.packageIndices)
+			PluginSelectDialog.pluginInfo[p.name] = []
+			PluginSelectDialog.ui.packageList.addItems(p.getName())
 
+	# Load all plugins and store them according to their package
 	@staticmethod
 	def updatePluginInfo():
-		for p in PluginSelectDialog.packages:
+		for p in PluginSelectDialog.packageInfo:
 			for m in p.getPluginNames():
-				if not m in PluginSelectDialog.pluginInfo:
+				if not m in PluginSelectDialog.pluginInfo[p.name]:
 					plugin = p.newPlugin(m,True)
 					if plugin is not None:
-						PluginSelectDialog.pluginInfo[m] = plugin
-						PluginSelectDialog.pluginInfo[plugin.getName()] =plugin
+						PluginSelectDialog.pluginInfo[p.name][m] = plugin
+						(PluginSelectDialog.pluginInfo[p.name]
+							[plugin.getName()]) = plugin
 
+
+#HEY I JUST STARTED APPENDING PACKAGE NAMES TO PLUGINS IN PLUGIN INFO BUT THIS
+#ISN"T THE BEST WAY< TAKE CARE OF IT.
+
+	# Update the plugin list widget to contain the selected package's plugins
 	@staticmethod
 	def updatePluginList():
 		if PluginSelectDialog.ui.packageList.currentItem() is None: return;
 		index_ = PluginSelectDialog.ui.packageList.currentIndex().row()
+		package = PluginSelectDialog.packageInfo[index_]
 
 		PluginSelectDialog.updatePluginInfo()
 
@@ -67,8 +87,8 @@ class PluginSelectDialog(QDialog):
 		PluginSelectDialog.ui.pluginList.addItems(
 			[
 				PluginSelectDialog.pluginInfo[m].getName()
-				for m in PluginSelectDialog.packages[index_].getPluginNames()
-				if m in PluginSelectDialog.pluginInfo
+				for m in package.getPluginNames()
+				if m in PluginSelectDialog.pluginInfo[package.name]
 			]
 		)
 		PluginSelectDialog.ui.pluginList.setCurrentRow(0)
@@ -78,19 +98,20 @@ class PluginSelectDialog(QDialog):
 		if PluginSelectDialog.ui.pluginList.currentItem() is None: return;
 
 		index_ = PluginSelectDialog.ui.packageList.currentIndex().row()
-		name = sorted(PluginSelectDialog.packages[index_].getPluginNames())
-		name = name[PluginSelectDialog.ui.pluginList.currentIndex().row()]
+		package = PluginSelectDialog.packageInfo[index_]
+		names = sorted(package.getPluginNames())
+		name = names[PluginSelectDialog.ui.pluginList.currentIndex().row()]
 
 		# Failsafe
 		# plugin = None
 		# if not name in PluginSelectDialog.pluginInfo:
-		# 	plugin = PluginSelectDialog.packages[index_].newPlugin(name,True)
+		# 	plugin = PluginSelectDialog.packageInfo[index_].newPlugin(name,True)
 		# 	PluginSelectDialog.pluginInfo[name] = plugin
 		# else:
-		if name not in PluginSelectDialog.pluginInfo:
+		if name not in PluginSelectDialog.pluginInfo[package.name]:
 			return
 
-		plugin = PluginSelectDialog.pluginInfo[name]
+		plugin = PluginSelectDialog.pluginInfo[package.name][name]
 
 		PluginSelectDialog.ui.name.setText(plugin.getName())
 		PluginSelectDialog.ui.version.setText(plugin.getVersion())
@@ -99,48 +120,73 @@ class PluginSelectDialog(QDialog):
 
 		return
 
+	# Return the nice name of the currently selected plugin
 	def getCurrentPluginName(self):
 		return self.ui.pluginList.currentItem().text()
 
+	# Return the nice name of the currently selected package
 	def getCurrentPackageName(self):
 		return self.ui.packageList.currentItem().text()
 
+	# Returns a full plugin object of the currently selected plugin
 	def getCurrentPlugin(self):
 		index_ = self.ui.packageList.currentIndex().row()
-		name = sorted(self.packages[index_].getPluginNames())
-		name = name[self.ui.pluginList.currentIndex().row()]
-		return self.packages[index_].newPlugin(name)
+		package = self.packageInfo[index_]
+		names = sorted(package.getPluginNames())
+		name = names[self.ui.pluginList.currentIndex().row()]
+		return package.newPlugin(name)
 
+	# Returns a list of nice names for every package
+	# Returns a list of real names for every package
 	@staticmethod
-	def getPackageNames():
-		return [p.getName() for p in PluginSelectDialog.packages]
+	def getPackageNames(real=False):
+		if real:
+			print('realll')
+			print([p.name for p in PluginSelectDialog.packageInfo])
+			return [p.name for p in PluginSelectDialog.packageInfo]
+		else:
+			return [p.getName() for p in PluginSelectDialog.packageInfo]
 
+	# Returns a list of plugin nice names given a package nice or real name
+	# If you want the real names, get them from a package object
 	@staticmethod
-	def getPluginNames(package):
+	def getPluginNames(package,real=False):
 		print(package)
+		if real and package in PluginSelectDialog.packageIndices:
+			return PluginSelectDialog.packageInfo[
+				PluginSelectDialog.packageIndices[package]
+			].getPluginNames()
+
 		index_ = PluginSelectDialog.ui.packageList.findItems(
 			package,Qt.MatchFixedString
 		)
 		if len(index_)  > 0:
 			index_ = PluginSelectDialog.ui.packageList.row(index_[0])
 			names = []
-			for m in PluginSelectDialog.packages[index_].getPluginNames():
+			for m in PluginSelectDialog.packageInfo[index_].getPluginNames():
 				if m in PluginSelectDialog.pluginInfo:
 					names.append(PluginSelectDialog.pluginInfo[m].getName())
 			return names
 
+	# Returns a package item given its nice or real name
 	@staticmethod
-	def getPackage(package):
+	def getPackage(package,real=False):
+		if real and package in PluginSelectDialog.packageIndices:
+			return PluginSelectDialog.packageInfo[
+				PluginSelectDialog.packageIndices[package]
+			]
 		index_ = PluginSelectDialog.ui.packageList.findItems(
 			package,Qt.MatchFixedString
 		)
 		if len(index_) > 0:
 			index_ = PluginSelectDialog.ui.packageList.row(index_[0])
-		return PluginSelectDialog.packages[index_]
+		return PluginSelectDialog.packageInfo[index_]
 
+	# Returns a plugin item by providing it's real package name and real name
+	# The returned object has no ui widget
 	@staticmethod
 	def getPluginInfo(package,plugin):
-		return PluginSelectDialog.pluginInfo[plugin]
+		return PluginSelectDialog.pluginInfo[package][plugin]
 
 class LoginDialog(QDialog):
 	credentials = pyqtSignal([str, str])

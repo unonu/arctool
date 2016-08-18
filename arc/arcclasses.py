@@ -133,9 +133,9 @@ class Profile():
 		sections = []
 		for i in range(len(self.sections)):
 			title = self.listWidget.item(i).text()
-			toc += "\t<section title=\"%s\" pos=%d/>\n" %(title,i)
+			toc += '\t<section title="%s" pos=%d/>\n' %(title,i)
 			sections.append(self.sections[self.sectionTitles[title]])
-		toc = "<contents>\n%s</contents>\n" %(toc)
+		toc = '<contents>\n%s</contents>\n' %(toc)
 		return (toc, sections)
 
 class Section():
@@ -175,11 +175,11 @@ class Section():
 
 	def serialise(self):
 		if self.plugin is None:
-			return "<section title=\"%s\" plugin=\"None\" showTitle=%d/>\n"\
-				%(self.title,1 if self.showTitle else 0)
+			return ('<section title="%s" plugin="None" showTitle=%d/>\n'
+				%(self.title,1 if self.showTitle else 0))
 			
-		return ("<section title=\"%s\" plugin=\"%s\" showTitle=%d>\n\t%s</sec"\
-				"tion>\n") %(self.title, self.plugin.__name__,
+		return ('<section title="%s" plugin="%s" showTitle=%d>\n\t%s</sec'
+				'tion>\n') %(self.title, self.plugin.__name__,
 					1 if self.showTitle else 0, self.plugin.serialise())
 
 class Package():
@@ -193,7 +193,7 @@ class Package():
 		self.sources = []
 
 		loader = importlib.machinery.SourceFileLoader(
-			"package",os.path.join(path,"__init__.py")
+			str(path.__hash__()),os.path.join(path,"__init__.py")
 		)
 		package = loader.load_module()
 		self.pluginNames = package.__all__
@@ -237,7 +237,7 @@ class Package():
 		path = os.path.join(self.path, name)
 
 		loader = importlib.machinery.SourceFileLoader(
-			name + "MOD",path + ".py"
+			name + "MOD_" + self.name,path + ".py"
 		)
 		# try:
 		plugin = loader.load_module()
@@ -543,8 +543,8 @@ class TimeContext(Context):
 			self.ui.timeBegin.setMaximumTime(QTime(23,59,59,999))
 
 	def callback(self,content):
-		#If the content got this far, we'd better hope it meshes with this context
-		# Content in this Context should implement "getTime"
+		# If the content got this far, we'd better hope it meshes with this
+		# context. Content in this Context should implement "getTime"
 		# if content.getTime is None
 		valid = True
 		time = content.getTime()
@@ -593,7 +593,7 @@ class TimeContext(Context):
 def PackOptions(opts):
 	pack = ''
 	for k in opts:
-		pack += "<opt key=\"%s\" value=\"%s\" property=\"%s\" type=\"%s\"/>\n"\
+		pack += '<opt key="%s" value="%s" property="%s" type="%s"/>\n'\
 			%(k,str(opts[k][0]).replace('"','\\"'),opts[k][1],
 				type(opts[k][0]).__name__)
 	return pack
@@ -601,6 +601,6 @@ def PackOptions(opts):
 def packExtras(extras):
 	pack = ''
 	for k in extras:
-		pack += "<extra key=\"%s\" value=\"%s\"/>\n"\
+		pack += '<extra key="%s" value="%s"/>\n'\
 			%(k,str(extras[k]).replace('"','\\"'))
 	return pack

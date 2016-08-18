@@ -117,9 +117,9 @@ class ARCTool(QMainWindow):
 		self.packages = []
 		self.plugins = {}
 		self.packageNames = {}
+		self.loadPackages()
 		self.pluginDialog = ARCG.PluginSelectDialog(self)
 		self.pluginDialog.accepted.connect(self.assignSectionPlugin)
-		self.loadPackages()
 
 		# Preference Dialog
 		self.preferenceDialog = ARCP.PreferenceManager(self)
@@ -573,7 +573,8 @@ class ARCTool(QMainWindow):
 				for m in package.getPluginNames():
 					self.plugins[m] = package
 
-		ARCG.PluginSelectDialog.updateModuleList()
+		print(self.packages)
+		# ARCG.PluginSelectDialog.updatePluginList()
 
 	def generateReport(self):
 		self.ui.statusBar.showMessage("Generating Report...")
