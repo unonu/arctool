@@ -4,10 +4,15 @@ Install a Package
 Installing a Package File
 -------------------------
 
+Packages can be installed from within the application via *Tools > Import
+Package*. Proper package archives should have the `__init__.py` file at the
+top level and so on. The archive will automatically be extracted to 
+`~/.local/share/arctool/packages` or equivalent.
+
 Installing a Package by Hand
 ----------------------------
 
-Unarchive the package and place it in ~/.local/share/arctool/packages or
+Unarchive the package and place it in `~/.local/share/arctool/packages` or
 equivalent.
 
 Handling Package Dependencies
