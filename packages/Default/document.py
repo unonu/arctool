@@ -43,15 +43,11 @@ class Plugin(arcclasses.Plugin):
 	#call super
 	def update(self):
 		super(Plugin,self).update()
-
 		#updated from extras
 
 	#needed
 	def storeOptions(self):
-		# self.options['logicBox'] =\
-		# 	(self.widget.logicBox.text(),'text')
-		pass
-
+		self.options['lineEdit'] = self.widget.lineEdit.text(),'text'
 
 	#override
 	def generate(self):
