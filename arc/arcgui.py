@@ -5,7 +5,7 @@ from ui.logindialog import Ui_LoginDialog
 from . import arcclasses as ARCC
 
 class PluginSelectDialog(QDialog):
-	# This is bad. If another object want's to be the parent, what will happen?
+	# This is bad. If another object wants to be the parent, what will happen?
 	# But at the same time, this needs to be relatively static due to it being
 	# needed by different parts of the program. Maybe have instances tied to
 	# the ARCTool and just have things find that? WHAT SHOULD I DO. Oh well, it

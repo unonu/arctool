@@ -49,9 +49,11 @@ class Plugin(arcclasses.Plugin):
 	def storeOptions(self):
 		self.options["prefix"] = (self.widget.prefix.text(), "text")
 		self.options["suffix"] = (self.widget.suffix.text(), "text")
-		self.options["styleBox"] = (self.widget.styleBox.currentIndex(), "currentIndex")
+		self.options["styleBox"] = (self.widget.styleBox.currentIndex(),
+									"currentIndex")
 		# for i in range(self.items):
-		self.extras["list"] = '||'.join(self.widget.list.item(i).text().replace('|',' |') for i in range(self.items))
+		self.extras["list"] = '||'.join(self.widget.list.item(i).text()
+			.replace('|',' |') for i in range(self.items))
 
 	#override
 	def generate(self):
@@ -93,4 +95,5 @@ class Plugin(arcclasses.Plugin):
 	def styleChanged(self,index):
 		self.widget.fixWidget.setEnabled(index > 2)
 		s = ['...','1','a','A','i','I']
-		self.widget.label.setText(s[max(self.widget.styleBox.currentIndex()-2,0)])
+		self.widget.label.setText(
+			s[max(self.widget.styleBox.currentIndex()-2,0)])

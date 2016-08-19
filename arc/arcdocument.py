@@ -11,7 +11,8 @@ except ImportError:
 	pass
 
 class Document(QTextDocument):
-	realHtml = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head><body>'
+	realHtml = ('<html><head><meta http-equiv="Content-Type"'
+				'content="text/html; charset=utf-8"/></head><body>')
 	def __init__(self,title="Untitled Document"):
 		super(Document,self).__init__()
 		self.title = title
@@ -53,17 +54,6 @@ class Document(QTextDocument):
 
 	def getTitle(self):
 		return self.title
-
-# def odfExport(document,title=''):
-# 	path = QFileDialog.getSaveFileName(
-# 		None,"Export Report",title+'.odf',
-# 		"Open Document Format (*.odf)"
-# 	)
-# 	if path is None or path[0] == '':
-# 		return
-
-# 	writer = QTextDocumentWriter(path[0],b"ODF")
-# 	writer.write(document)
 
 def textExport(document,title=''):
 	path = QFileDialog.getSaveFileName(

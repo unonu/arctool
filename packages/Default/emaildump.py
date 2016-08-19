@@ -262,7 +262,7 @@ class Plugin(arcclasses.Plugin):
 					plc.removeSelectedText()
 				go = plc.movePosition(plc.NextBlock)
 			# print('pleasantries forgone')
-		print(doc.toHtml().count(chr(29)))
+		# print(doc.toHtml().count(chr(29)))
 
 
 		if self.igSpace:

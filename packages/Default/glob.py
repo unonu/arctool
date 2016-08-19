@@ -34,7 +34,7 @@ class Glob(object):
 		self.dev = 0.0	# Deviation (stdev/mean)
 		self.num = '0'*12 # Unique number, independent of text. 96 bits
 		if len(curs) > 0:
-			print(curs)
+			# print(curs)
 			self.setValue(*curs)
 
 	def __str__(self):
@@ -243,15 +243,15 @@ class GlobItem():
 				sum( 1 for g in self.globs if g.cla == 1),
 				sum( 1 for g in self.globs if g.cla == 2))
 		self.cla = cou.index(max(cou))
-		print('class for glob set to',self.sub)
+		# print('class for glob set to',self.sub)
 
 		cou = ( sum( 1 for g in self.globs if g.sub == 0),
 				sum( 1 for g in self.globs if g.sub == 1),
 				sum( 1 for g in self.globs if g.sub == 2))
 		self.sub = cou.index(max(cou))
-		print('sub for glob set to',self.sub)
+		# print('sub for glob set to',self.sub)
 
-		print([g.cov for g in self.globs])
+		# print([g.cov for g in self.globs])
 		self.cov = sum(g.cov for g in self.globs)/len(self.globs)
 		self.cov = (self.cov,sqrt(
 			sum((g.cov-self.cov)**2 for g in self.globs)/len(self.globs)))
@@ -282,12 +282,12 @@ class GlobItem():
 		sta = self.sta[1][0]*cha # get start relative to this doc
 		if (sta >= self.sta[0][0]-self.sta[0][1] and
 			sta <= self.sta[0][0]+self.sta[0][1]):
-			print('aaa')
+			# print('aaa')
 			cur.setPosition(sta) # use relative if within expectations
 			cer += .1
 		else:
 			# use hard start. doesn't boost confidence
-			print('b')
+			# print('b')
 			cur.setPosition(self.sta[0][0])
 		inb = cur.blockNumber() # cursor's starting block
 		cur.movePosition(cur.StartOfWord)
@@ -295,14 +295,14 @@ class GlobItem():
 		end = self.end[1][0]*cha
 		if (end >= self.end[0][0]-self.end[0][1] and
 			end <= self.end[0][0]+self.end[0][1]):
-			print('c')
+			# print('c')
 			cur.setPosition(end,cur.KeepAnchor)
 			cer += .1
 		else:
-			print('e')
+			# print('e')
 			cur.setPosition(self.end[0][0],cur.KeepAnchor)
 		cur.movePosition(cur.EndOfWord,cur.KeepAnchor)
-		print('flag a')
+		# print('flag a')
 		# Match word count based on line sub classification
 		if self.cla == 0:
 			print("I'm a line")
@@ -339,7 +339,7 @@ class GlobItem():
 				cur.movePosition(cur.EndOfBlock,cur.KeepAnchor)
 				# print('d')
 
-		print('flag b')
+		# print('flag b')
 		text = cur.selectedText() # go ahead and grab the text
 
 		# check coverage, word count, line count and deviation,

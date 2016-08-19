@@ -21,7 +21,7 @@ class EmailFilterLogicValidator(QtGui.QValidator):
 									(?:^|(?<=\ ))and(?=\W)|
 									(?:^|(?<=\ ))or(?=\W)|
 									(?<!^not)(?<!\ not)
-									(?<!\(not)(?<!\()(?<!!)\ +(?!\))''',str)\
+									(?<!\(not)(?<!\()(?<!!)\ +(?!\))''',str)
 									if x != '']
 		ops = re.findall('''(?ix)&{1,2}|\|{1,2}|(?:^|(?<=\ ))and(?=\W)|
 							(?:^|(?<=\ ))or(?=\W)''',str)
@@ -176,7 +176,7 @@ class EmailFilterTable(QtWidgets.QTableWidget):
 		# No symbols, only ors and nots (and labels and p'rens)
 		pat = [x for x in re.split('''(?ix)[&|]{1,2}|(?:^|(?<=\ ))and(?=\W)|
 									(?:^|(?<=\ ))or(?=\W)|(?<!^not)(?<!\ not)
-									(?<!\(not)(?<!\()(?<!!)\ +(?!\))''',logic)\
+									(?<!\(not)(?<!\()(?<!!)\ +(?!\))''',logic)
 									if x != '']
 		labels = re.findall('(\w+) *(?:\)+)?(?=,|$)',','.join(pat))
 
@@ -202,7 +202,7 @@ class EmailFilterTable(QtWidgets.QTableWidget):
 		# print(split)
 
 		parts = [p for p in\
-			re.split('|'.join(['(?:^|(?<= |\())%s(?:$|(?= |\)))' %(x) for x in\
+			re.split('|'.join(['(?:^|(?<= |\())%s(?:$|(?= |\)))' %(x) for x in
 				set(labels)]),' '.join(split)) if p != None and p != '']
 
 		# print(pat)
@@ -258,6 +258,7 @@ class EmailFilterTable(QtWidgets.QTableWidget):
 			self.filters[f].setValue(filters[f][2][1:-1].replace('\\"','"'))
 
 class EmailFilter():
+	# Criterion and their types
 	_crit = [
 		('ANSWERED','bool'),('BCC','string'),('BEFORE','date'),
 		('BODY','string'),('CC','string'),('DELETED','bool'),
@@ -269,6 +270,7 @@ class EmailFilter():
 		('SUBJECT','string'),('TEXT','string'),('TO','string'),
 		('UID','string')
 	]
+	# Criterion with proper casing
 	_critNice = [
 		'Answered','BCC','Before','Body','CC','Deleted',
 		'Draft','Flagged','From','Keyword','Larger','New',
@@ -276,6 +278,7 @@ class EmailFilter():
 		'Sent Since','Since','Smaller','Subject','Text','To',
 		'UID'
 	]
+	# Possible labels
 	_ops = {
 		'string' : ('contains', 0),
 		'bool' : ('is', 1),
@@ -299,6 +302,7 @@ class EmailFilter():
 		] 
 		self.widgets[0].setValidator(self._validator)
 		self.widgets[1].addItems(self._critNice)
+		
 		# String
 		self.widgets[3].addWidget(QtWidgets.QLineEdit())
 		self.widgets[3].widget(0).textChanged.connect(

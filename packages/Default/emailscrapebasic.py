@@ -445,9 +445,9 @@ class Plugin(arcclasses.Plugin):
 		brush = QBrush(QColor('#00e34b'))
 		highlight.setBackground(brush)
 		for s in set:
-			print('e')
+			# print('e')
 			cursor.setPosition(s[0])
-			print('f')
+			# print('f')
 			cursor.setPosition(s[1],cursor.KeepAnchor)
 			cursor.mergeCharFormat(highlight)
 		cursor.endEditBlock()
@@ -458,7 +458,7 @@ class Plugin(arcclasses.Plugin):
 			item = GlobItem()
 			for message in self.groups[g]:
 				doc = QTextDocument()
-				print('message in', g)
+				# print('message in', g)
 				body = ''
 				for part in message.walk():
 					typ = part.get_content_type()
@@ -487,11 +487,11 @@ class Plugin(arcclasses.Plugin):
 				curs = []
 				for p in self.groups[g][message]:
 					curs.append(QTextCursor(doc))
-					print(p,doc.characterCount())
-					print('g')
+					# print(p,doc.characterCount())
+					# print('g')
 					curs[-1].setPosition(p[0])
 
-					print('h')
+					# print('h')
 					curs[-1].setPosition(p[1],curs[-1].KeepAnchor)
 
 					if curs[-1].selectedText() == '':
@@ -565,7 +565,7 @@ class Plugin(arcclasses.Plugin):
 				)
 				# print('find $%s$: %s' %(group, 'FAIL' if cur.isNull()
 											# else 'OK'))
-				print('loop', len(self.groups))
+				# print('loop', len(self.groups))
 				text, ok, perc = self.items[group].getText(ref)
 				# print('find starting at %d: %s %f' %(i,text,perc))
 				while not cur.isNull():

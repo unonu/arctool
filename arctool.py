@@ -354,7 +354,7 @@ class ARCTool(QMainWindow):
 			print("Missing section details")
 			return
 
-		# As a matter of course, these indicies correspond to those in sections
+		# As a matter of course, these indices correspond to those in sections
 		plugins = []
 		for s in sections:
 			section = re.search(
@@ -389,7 +389,7 @@ class ARCTool(QMainWindow):
 				# Construct a dictionary of key -> (value, prop, type)
 				# or key -> value
 				if options:
-					# ummm should escap xml so this can't get tricked
+					# ummm should escape xml so this can't get tricked
 					# print(options)
 					numOpts = len(re.findall("<\s*opt",options))
 					numExt = len(re.findall("<\s*extra",options))
@@ -401,7 +401,7 @@ class ARCTool(QMainWindow):
 					properties = re.findall("property\s*=\s*\"(\w+)",options)
 					types = re.findall("type\s*=\s*\"(\w+)",options)
 					# print(keys, values)
-					# Make sure to unescape quotes, BTW
+					# Make sure to un-escape quotes, BTW
 					options = dict(
 						[
 							(keys[x],
@@ -430,7 +430,7 @@ class ARCTool(QMainWindow):
 			if plugins[x][0] != "None":
 				m = self.packageNames[plugins[x][1]].newPlugin(plugins[x][0])
 				if m is None:
-					# Should disable section, but keep the plugin assossciation
+					# Should disable section, but keep the plugin association
 					continue
 				# print("Set %s to %s" %(sections[x][0],plugins[x][0]))
 				# Options

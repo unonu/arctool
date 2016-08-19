@@ -13,7 +13,7 @@ class Profile():
 
 		self.name = "New Profile"
 
-		# Section Titles map to indicies in "sections"
+		# Section Titles map to indices in "sections"
 		self.sectionTitles = {}
 		self.sections = []
 		self.context = None
@@ -466,7 +466,7 @@ class DateContext(Context):
 		return {
 			"name" : cd.toString("MMMM"),
 			"long" : cd.toString("MMMM"),
-			"abreviation" : cd.toString("MMM"),
+			"abbreviation" : cd.toString("MMM"),
 			"short" : cd.toString("MMM"),
 			"number" : cd.toString("M"),
 		}[format.lower()]
@@ -483,7 +483,7 @@ class DateContext(Context):
 		return {
 			"name" : cd.toString("dddd"),
 			"long" : cd.toString("dddd"),
-			"abreviation" : cd.toString("ddd"),
+			"abbreviation" : cd.toString("ddd"),
 			"short" : cd.toString("ddd"),
 			"number" : cd.toString("d"),
 		}[format.lower()]
