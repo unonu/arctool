@@ -32,7 +32,7 @@ class Glob(object):
 		self.wc = 1	# Word count
 		self.lc = 1	# Line count
 		self.dev = 0.0	# Deviation (stdev/mean)
-		self.num = '0'*12 # Unique number, independent of text. 96 bits
+		self.num = '0'*24 # Unique number, independent of text. 96 bits
 		if len(curs) > 0:
 			# print(curs)
 			self.setValue(*curs)
@@ -61,21 +61,21 @@ class Glob(object):
 
 		g.cla = int(num[13],16) >> 2
 
-		g.sub = int(num[13],16) & 0xc
+		g.sub = int(num[13],16) & 0x3
 
 		g.cov = int(num[14:17],16) >> 2
 		g.cov /= 1000.
 
 		g.wc = int(num[16:19],16) & 0x3ff
 
-		g.lc = int(num[19:22],16) & 0xffc
+		g.lc = int(num[19:22],16) >> 2
 
 		g.dev = int(num[21:],16) & 0x3ff
 		g.dev /= 1000.
 
 		g.calc()
 		if g.num != num:
-			print("messed up")
+			print("messed up", g.num, num)
 			return None
 
 		return g
@@ -90,25 +90,31 @@ class Glob(object):
 
 		b = (self.end[0] & 65535)
 
+		# All 10 bits from sta1, upper 6 bits from end1
 		c = (int(self.sta[1]*1000) & 0x3ff) << 6
 		c |= (int(self.end[1]*1000) & 0x3ff) >> 4
 
+		# Lower 4 bits from end1, both bits from cla, both bits from sub,
+		# upper 8 bits from cov
 		d = (int(self.end[1]*1000) & 0xf) << 12
 		d |= (self.cla & 3) << 10
 		d |= (self.sub & 3) << 8
 		d |= (int(self.cov*1000) & 0x3ff) >> 2 
 
+		# Lower 2 bits from cov, all 10 bits from wc, upper 4 bits from lc
 		e = (int(self.cov*1000) & 0x3) << 14
 		e |= (self.wc & 0x3ff) << 4
 		e |= (self.lc & 0x3ff) >> 6
 
+		# Lower 6 bits from lc, all 10 bits from dev
 		f = (self.lc & 0x3f) << 10
 		f |= (int(self.dev*1000) & 0x3ff)
 
+		# Easier this way to make a long hex string
 		byt = bytearray(12)
-		byt[0] = a >> 8
-		byt[1] = a & 0xff
-		byt[2] = b >> 8
+		byt[0] = a >> 8 # upper 8 = first character
+		byt[1] = a & 0xff # lower 8 = second character
+		byt[2] = b >> 8 # ...
 		byt[3] = b & 0xff
 		byt[4] = c >> 8
 		byt[5] = c & 0xff

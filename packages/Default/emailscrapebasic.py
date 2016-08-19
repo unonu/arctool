@@ -35,10 +35,13 @@ class Plugin(arcclasses.Plugin):
 		self.contexts = ['Date']
 
 		self.emails = []
+		# Map group names to a map of email objects to a list of cursor
+		# location tupples ;P
 		self.groups = {}
 		self.fetched = False
 		self.groupColors = [] #https://en.wikipedia.org/wiki/Web_colors
 		self.currentGroup = None
+		# Map group names to glob items
 		self.items = {}
 		self.fragments = {}
 
@@ -130,6 +133,14 @@ class Plugin(arcclasses.Plugin):
 		if 'groups' in self.extras and self.extras['groups'] != '':
 			for g in self.extras['groups'].split(','):
 				self.addGroup(g)
+		if 'globs' in self.extras:
+			globs = self.extras['globs'].split(',')
+			self.items = {}
+			for g in globs:
+				group, num = g.split(':')
+				if group not in self.items:
+					self.items[group] = GlobItem()
+				self.items[group] + Glob.fromNum(num)
 
 	#needed
 	def storeOptions(self):
@@ -147,6 +158,13 @@ class Plugin(arcclasses.Plugin):
 		self.extras['filters'] = self.widget.emailFilterTable.serialize()
 		self.extras['format'] = self.widget.formatEdit.toHtml()
 		self.extras['groups'] = ','.join(self.groups.keys())
+		self.constructItems()
+		globs = []
+		for group in self.items:
+			for glob in self.items[group].globs:
+				globs.append('%s:%s' %(group,glob))
+
+		self.extras['globs'] = ','.join(globs)
 
 	#override
 	def generate(self):
@@ -481,7 +499,8 @@ class Plugin(arcclasses.Plugin):
 								body += (part.get_payload(decode=True)
 										.decode('utf-8'))
 							except UnicodeDecodeError:
-								body += (quopri.decodestring(part.get_payload())
+								body += (quopri.decodestring(
+											part.get_payload())
 										.decode('utf-8'))
 				doc.setHtml(body)
 				curs = []
