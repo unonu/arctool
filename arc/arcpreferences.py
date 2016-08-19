@@ -26,19 +26,26 @@ class PreferenceManager(QDialog):
 			PreferenceManager.ui.treeWidget.currentItemChanged.connect(
 				PreferenceManager.updateForm
 			)
-			print('a')
 			for k in sorted(PSD.getPackageNames(True)):
-				print(k)
 				PreferenceManager.preferences[k] = {
 					'':PSD.getPackage(k).preferenceDict or {}
 				}
 				twi = QTreeWidgetItem()
 				twi.setText(0,k)
+
+				# this sub map maps the nice names back up to the real names
+				# for convenience. Should the same be done for packages?
+				# consequentially this means plugins cannot be called '_'
+				PreferenceManager.preferences[k]['_'] = {}
+
 				for m in sorted(PSD.getPluginNames(k,True)):
-					PreferenceManager.preferences[k][m] =\
-						PSD.getPluginInfo(k,m).getPreferenceDict()
+					plugin = PSD.getPluginInfo(k,m)
+					PreferenceManager.preferences[k][m] = (
+						plugin.getPreferenceDict())
+					PreferenceManager.preferences[k]['_'][plugin.getName()] = (
+						PreferenceManager.preferences[k][m])
 					child = QTreeWidgetItem()
-					child.setText(0,m)
+					child.setText(0,plugin.getName())
 					twi.addChild(child)
 
 				PreferenceManager.ui.treeWidget.addTopLevelItem(twi)
@@ -77,8 +84,9 @@ class PreferenceManager(QDialog):
 			
 		package = None
 		if child:	
-			package = PreferenceManager.preferences[item.parent().text(0)]\
-												   [item.text(0)]
+			package = (PreferenceManager.preferences[item.parent().text(0)]
+													['_']
+													[item.text(0)])
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
 		PreferenceManager.ui.formWidget.setParent(None)
@@ -160,8 +168,9 @@ class PreferenceManager(QDialog):
 		child = True if item.parent() else False
 
 		if child:	
-			package = PreferenceManager.preferences[item.parent().text(0)]\
-												   [item.text(0)]
+			package = (PreferenceManager.preferences[item.parent().text(0)]
+													['_']
+													[item.text(0)])
 		else:
 			package = PreferenceManager.preferences[item.text(0)]['']
 
@@ -182,6 +191,8 @@ class PreferenceManager(QDialog):
 		prefs = ''
 		for p in PreferenceManager.preferences:
 			for s in PreferenceManager.preferences[p]:
+				if s == '_':
+					continue
 				for k in sorted(PreferenceManager.preferences[p][s].keys()):
 					params = PreferenceManager.preferences[p][s][k]
 					# print(params['type'])

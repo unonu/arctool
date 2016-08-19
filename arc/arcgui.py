@@ -37,7 +37,7 @@ class PluginSelectDialog(QDialog):
 			)
 			self.setWindowTitle("Select Plugin")
 
-			# PluginSelectDialog.updatePackageList()
+			PluginSelectDialog.updatePackageList()
 			PluginSelectDialog.updatePluginList()
 			PluginSelectDialog.ui.packageList.setCurrentRow(0)
 			PluginSelectDialog.__init = True
@@ -47,7 +47,6 @@ class PluginSelectDialog(QDialog):
 	# Also create an entry in the pluginInfo list for each package's plugins
 	@staticmethod
 	def updatePackageList():
-		print(PluginSelectDialog.parent.packages)
 		PluginSelectDialog.packageInfo = sorted(
 			PluginSelectDialog.parent.packages)
 		PluginSelectDialog.ui.packageList.clear()
@@ -55,8 +54,8 @@ class PluginSelectDialog(QDialog):
 		for p in PluginSelectDialog.packageInfo:
 			PluginSelectDialog.packageIndices[p.name] = len(
 				PluginSelectDialog.packageIndices)
-			PluginSelectDialog.pluginInfo[p.name] = []
-			PluginSelectDialog.ui.packageList.addItems(p.getName())
+			PluginSelectDialog.pluginInfo[p.name] = {}
+			PluginSelectDialog.ui.packageList.addItem(p.getName())
 
 	# Load all plugins and store them according to their package
 	@staticmethod
@@ -86,7 +85,7 @@ class PluginSelectDialog(QDialog):
 		PluginSelectDialog.ui.pluginList.clear()
 		PluginSelectDialog.ui.pluginList.addItems(
 			[
-				PluginSelectDialog.pluginInfo[m].getName()
+				PluginSelectDialog.pluginInfo[package.name][m].getName()
 				for m in package.getPluginNames()
 				if m in PluginSelectDialog.pluginInfo[package.name]
 			]
@@ -141,8 +140,6 @@ class PluginSelectDialog(QDialog):
 	@staticmethod
 	def getPackageNames(real=False):
 		if real:
-			print('realll')
-			print([p.name for p in PluginSelectDialog.packageInfo])
 			return [p.name for p in PluginSelectDialog.packageInfo]
 		else:
 			return [p.getName() for p in PluginSelectDialog.packageInfo]
@@ -151,7 +148,6 @@ class PluginSelectDialog(QDialog):
 	# If you want the real names, get them from a package object
 	@staticmethod
 	def getPluginNames(package,real=False):
-		print(package)
 		if real and package in PluginSelectDialog.packageIndices:
 			return PluginSelectDialog.packageInfo[
 				PluginSelectDialog.packageIndices[package]

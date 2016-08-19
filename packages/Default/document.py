@@ -1,7 +1,8 @@
 from arctool import ARCTool
-from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtCore import QUrl, Qt, QStandardPaths
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from arc.arcpreferences import PreferenceManager as PM
 import arc.arcclasses as arcclasses
 import arc.arcgui as arcgui
 import pypandoc
@@ -22,6 +23,17 @@ class Plugin(arcclasses.Plugin):
 		self.contexts = []
 
 		self.path = ''
+		self.preferenceDict = {
+			'defaultpath' : {
+				'label':'Default document path',
+				'placeholder':QStandardPaths.standardLocations(
+					QStandardPaths.DocumentsLocation)[0],
+				'default':QStandardPaths.standardLocations(
+					QStandardPaths.DocumentsLocation)[0],
+				'type':'string',
+				'tooltip':'Default path to document folder.'
+			},
+		}
 
 	#needed
 	def setupUi(self):
@@ -64,7 +76,8 @@ class Plugin(arcclasses.Plugin):
 
 	def getPath(self):
 		path = QFileDialog.getOpenFileName(
-			None,"Choose Document",'',
+			None,"Choose Document",
+			PM.getPreference('Default Package','defaultpath',self.__name__),
 			("OpenDocument Text (*.odt);;OpenDocument XML (*.opml);;"
 			+ "Microsoft Word Document 2007/2010/2013 (*.docx);;"
 			+ "HTML (*.html);;LaTeX (*.latex);; EPUB (*.epub);;"

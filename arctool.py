@@ -37,6 +37,7 @@ class ARCTool(QMainWindow):
 
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
+		self.makeConfig = False
 		self.checkFileSystem()
 
 
@@ -124,6 +125,8 @@ class ARCTool(QMainWindow):
 		# Preference Dialog
 		self.preferenceDialog = ARCP.PreferenceManager(self)
 		self.ui.actionPreferences.triggered.connect(self.preferenceDialog.exec)
+		if self.makeConfig:
+			self.preferenceDialog.savePreferences()
 
 		# Import package file browser
 		self.ui.actionImport_Package.triggered.connect(self.openPackageArchive)
@@ -541,12 +544,15 @@ class ARCTool(QMainWindow):
 		self.storagePath = os.path.join(self.storagePath, 'arctool')
 		os.makedirs(self.storagePath, 0o777, True)
 		os.makedirs(os.path.join(self.storagePath, "packages"), 0o777, True)
-		open(os.path.join(self.storagePath, "config"), 'a').close()
+		try:
+			open(os.path.join(self.storagePath, "config"), 'r').close()
+		except OSError:
+			self.makeConfig = True
+
 		sys.path.append(os.path.dirname(__file__))
 		# Add package directories so packages can include local Python plugins
 		sys.path.append(os.path.join(self.storagePath, "packages"))
 		sys.path.append(os.path.join(os.path.dirname(__file__), "packages"))
-
 
 	def loadPackages(self):
 		packagePaths = []
@@ -572,9 +578,6 @@ class ARCTool(QMainWindow):
 				# Map plugin names to the package
 				for m in package.getPluginNames():
 					self.plugins[m] = package
-
-		print(self.packages)
-		# ARCG.PluginSelectDialog.updatePluginList()
 
 	def generateReport(self):
 		self.ui.statusBar.showMessage("Generating Report...")
